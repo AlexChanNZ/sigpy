@@ -28,8 +28,6 @@ class TrainingData:
     def add_events(self):
         i = 0
         while i < (len(self.regions)):
-            print i
-            print self.plotLength
             elec = self.regions[i][0] -1
             init_pos = self.regions[i][1]
             self.plotDat[self.plotLength + i,:] = self.data[elec][init_pos:init_pos+36]
@@ -41,8 +39,6 @@ class TrainingData:
     def add_non_events(self):
         i = 0
         while i < (len(self.regions)):
-            print i
-            print self.plotLength
             elec = self.regions[i][0] - 1
             init_pos = self.regions[i][1]
             self.plotDat[self.plotLength + i,:] = self.data[elec][init_pos:init_pos+36]

@@ -14,31 +14,25 @@ from lasagne.updates import nesterov_momentum
 from nolearn.lasagne import NeuralNet
 from nolearn.lasagne import visualize
 
-from sklearn.metrics import classification_report
-from sklearn.metrics import confusion_matrix
-
 class ClassifySlowWaveCNN:
 
-    def __init__(self):
-        self.data = []
-        self.len = 0
-        self.features = []
+    def __init__(self, training_set, events):
+        self.train_array = np.asarray(training_set).reshape((-1,1,6,6))
+        self.label_array = np.asarray(events)
 
-
-    def classify_data(self, training_set, events, test_data):
+    def classify_data(self, test_data, type_data_set):
         """
         The data is classified based on the training data.
         :param plot: Input values to be processed for generating features
         :return: predictions for the entire data set
         """
-        self.train_array = np.asarray(training_set).reshape((-1,1,6,6))
-        self.label_array = np.asarray(events)
+        self.train_neural_net(type_data_set);
         test_array = np.asarray(test_data)
         test_array = test_array.reshape((-1, 1, 6, 6))
         prediction = self.neural_net.predict(test_array)
         return prediction
         
-    def load_training_dataset(self):
+    def load_training_dataset_pacing(self):
         mat_data_path = '/media/ssat335/BRIDGE/ml/theano/pig68exp5pacing.mat'
         data_dic = sio.loadmat(mat_data_path)
         data_samples = np.array(data_dic['samples'])
@@ -57,18 +51,42 @@ class ClassifySlowWaveCNN:
         data_labels = np.array(data_dic['label'])
         X_train = np.append(X_train, data_samples[0:2000,:])
         y_train = np.append(y_train, data_labels[0:2000,:])    
-  
+        X_train = X_train.reshape((-1, 1, 6, 6))
+        return X_train, y_train
+    
+    def load_training_dataset_normal(self):
+        mat_data_path = '/media/ssat335/BRIDGE/ml/theano/exp3_A-H-256channels_recording_Elec_001.mat'
+        data_dic = sio.loadmat(mat_data_path)
+        data_samples = np.array(data_dic['samples'])
+        data_labels = np.array(data_dic['label'])
+        X_train = data_samples[0:4000,:]
+        y_train = data_labels[0:4000,:]
         X_train = X_train.reshape((-1, 1, 6, 6))
         return X_train, y_train
         
-    def train_neural_net(self):
-        if self.label_array.size() == 0:
-            f = open('config/nn_pacing.cnn', 'rb')
+    def train_neural_net(self, type_data_set):
+        if self.label_array.size == 0:
+            if (type_data_set == 0):
+                f = open('config/nn_normal.cnn', 'rb')
+            elif (type_data_set == 1):
+                f = open('config/nn_pacing.cnn', 'rb')
+            else:
+                print "No type selected"
             self.neural_net = pickle.load(f)
             f.close()
             return
-        
-        X_train, y_train = load_training_dataset()
+            
+        if (type_data_set == 0):
+            X_train, y_train = self.load_training_dataset_normal()
+        elif (type_data_set == 1):
+            X_train, y_train = self.load_training_dataset_pacing()
+        else:
+            print "No type selected"
+        print X_train.shape
+        print self.train_array.shape
+        X_train = np.append(X_train, self.train_array, axis=0)
+        print X_train.shape
+        y_train = np.append(y_train, self.label_array.transpose())
         nn = NeuralNet(
             layers=[('input', layers.InputLayer),
                     ('conv2d1', layers.Conv2DLayer),
@@ -106,4 +124,7 @@ class ClassifySlowWaveCNN:
             verbose=1,
             )
         # Train the network
+        print X_train.shape
+        print y_train.shape
+        y_train = y_train.astype(np.int32)
         self.neural_net = nn.fit(X_train, y_train.flatten())

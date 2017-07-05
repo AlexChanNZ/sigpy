@@ -14,7 +14,7 @@ import config_global as cg
 """
 Gastric data pacing
 """
-data = '/media/hpc/codes/MatLab/normalise_data/pig68_exp5_pacing.mat'
+data = '/media/hpc/codes/MatLab/normalise_data/pig51_exp10_normal.mat'
 
 """
 Gastric data normal

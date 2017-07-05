@@ -20,7 +20,7 @@ from TrainingData import TrainingData
 from ARFFcsvReader import ARFFcsvReader
 from WekaInterface import WekaInterface
 from FeatureAnalyser import FeatureAnalyser
-from ClassifySlowWavesScikit import ClassifySlowWavesScikit
+from ClassifySlowWaveCNN import ClassifySlowWaveCNN
 import config_global as cg
 import scipy.io
 import theano
@@ -248,7 +248,6 @@ class GuiWindowDocks:
         self.s2.addPoints(x=pos_np[1], y=(pos_np[0] * 1.2))
 
     def writeWEKA_data(self):
-
         test_data = np.reshape(self.data, -1)
         data = self.trainingData.plotDat[0][0:self.trainingData.plotLength]
         events = self.trainingData.plotEvent[0][0:self.trainingData.plotLength]/5
@@ -283,19 +282,17 @@ class GuiWindowDocks:
         sample_np = np.empty((len(samples), window_size))
         for i, x in enumerate(samples):
             sample_np[i] = np.array(x)
-
-        X_test = sample_np.reshape((-1, 1, 6, 6))
-        if self.is_normal.isChecked():
-            f = open('config/nn_normal.cnn', 'rb')
-        elif self.is_pacing.isChecked():
-            f = open('config/nn_pacing.cnn', 'rb')
-        else:
-            print "Nothing selected"
-        neural_net = pickle.load(f)
-        f.close()
-        preds = neural_net.predict(X_test)
-        
+            
+        """
+        Classify the test data here
+        """
+        cnn = ClassifySlowWaveCNN(self.trainingData.plotDat[0:self.trainingData.plotLength, :], self.trainingData.plotEvent[0:self.trainingData.plotLength, :])
+        preds = cnn.classify_data(sample_np, 1)
         prediction = np.zeros((1, len(test_data)));
+        
+        """
+        Plot the outputs here.
+        """
         count = 0;
         locs = np.where(preds==1)[0]
         win_range = 0;        
@@ -307,7 +304,6 @@ class GuiWindowDocks:
                     prediction[0,j+window_size] = 1
                     win_range = j + 3*window_size;
         
-        print prediction.shape
         linear_at_uncorrected = np.array(np.where(prediction == 1))
         rows, cols = linear_at_uncorrected.shape
         to_remove_index = []
@@ -325,7 +321,6 @@ class GuiWindowDocks:
             sync_events.append(int(val % length))
         remove_sync_point = set([x for x in sync_events if sync_events.count(x) > 600])
         
-        print remove_sync_point
         #remove_sync_point.clear()
 
         ''' Remove the sync events from the actual array'''
