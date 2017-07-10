@@ -1,0 +1,9 @@
+numpy
+PyQt5
+pyqtgraph
+scipy
+theano
+lasagne
+matplotlib
+nolearn
+arff

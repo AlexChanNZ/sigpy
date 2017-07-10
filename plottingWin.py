@@ -14,7 +14,9 @@ import config_global as cg
 """
 Gastric data pacing
 """
-data = '/media/hpc/codes/MatLab/normalise_data/pig51_exp10_normal.mat'
+dataRoot = '/Users/m/_/Data/sigpy/'
+dataFile = 'pig51_exp10_normal.mat'
+dataFileAndRoot = dataRoot + dataFile
 
 """
 Gastric data normal
@@ -26,9 +28,10 @@ Intestine data
 """
 #data = '/media/hpc/GEMS/slow-wave-data/27082016_data_for_testing_ml/rabbit_intestine/RAB004_exp11_80cm_distal_LOT_Elec_Maps_data.mat'
 
-mat_contents = sio.loadmat(data)
+mat_contents = sio.loadmat(dataFileAndRoot)
+print(mat_contents)
 
-cg.set_data_file_name((data.rsplit('/', 1)[1]))
+cg.set_data_file_name((dataFileAndRoot.rsplit('/', 1)[1]))
 cg.set_test_file_name(str(cg.loaded_data_file) + str('_test.arff'))
 cg.set_training_file_name(str(cg.loaded_data_file) + str('_training.arff'))
 cg.set_trained_file(str(cg.loaded_data_file) + str('_trained.dat'))

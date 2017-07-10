@@ -2,10 +2,13 @@
 """
 Author : Shameer Sathar
 """
-import cPickle as pickle
+# import cPickle as pickle
+import six.moves.cPickle as pickle
 
 import numpy as np
 import scipy.io as sio
+import theano
+from theano.tensor.signal import pool
 
 import lasagne
 from lasagne import layers
@@ -71,7 +74,7 @@ class ClassifySlowWaveCNN:
             elif (type_data_set == 1):
                 f = open('config/nn_pacing.cnn', 'rb')
             else:
-                print "No type selected"
+                print("No type selected")
             self.neural_net = pickle.load(f)
             f.close()
             return
@@ -81,11 +84,11 @@ class ClassifySlowWaveCNN:
         elif (type_data_set == 1):
             X_train, y_train = self.load_training_dataset_pacing()
         else:
-            print "No type selected"
-        print X_train.shape
-        print self.train_array.shape
+            print("No type selected")
+        print(X_train.shape)
+        print(self.train_array.shape)
         X_train = np.append(X_train, self.train_array, axis=0)
-        print X_train.shape
+        print(X_train.shape)
         y_train = np.append(y_train, self.label_array.transpose())
         nn = NeuralNet(
             layers=[('input', layers.InputLayer),
@@ -124,7 +127,7 @@ class ClassifySlowWaveCNN:
             verbose=1,
             )
         # Train the network
-        print X_train.shape
-        print y_train.shape
+        print(X_train.shape)
+        print(y_train.shape)
         y_train = y_train.astype(np.int32)
         self.neural_net = nn.fit(X_train, y_train.flatten())

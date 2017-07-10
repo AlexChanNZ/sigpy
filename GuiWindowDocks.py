@@ -11,8 +11,10 @@ from multiprocessing import Process
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.dockarea import *
-import cPickle as pickle
-
+# import cPickle as pickle # Python3 
+import pickle
+import matplotlib as mpl 
+mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 
 # Locally-developed modules
@@ -331,7 +333,7 @@ class GuiWindowDocks:
         pos_np = np.asarray(pos).transpose()
 
         if pos_np.size is 0:
-            print "No events detected"
+            print("No events detected")
             return
         self.s1.addPoints(x=pos_np[1], y=(pos_np[0] * 1.2))
         self.s2.addPoints(x=pos_np[1], y=(pos_np[0] * 1.2))

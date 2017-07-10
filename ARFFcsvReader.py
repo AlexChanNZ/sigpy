@@ -27,7 +27,7 @@ class ARFFcsvReader:
             # 9,1:?,2:0.0,,1 >
             vals = line[2].split(":")[1]
             self.prediction.append(int(float(vals)))
-        print len(self.prediction)
+        print(len(self.prediction))
 
     def skip_last(self, iterator):
         """
