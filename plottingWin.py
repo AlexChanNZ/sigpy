@@ -14,9 +14,10 @@ import config_global as cg
 """
 Gastric data pacing
 """
-dataRoot = '/Users/m/_/Data/sigpy/'
+
 dataFile = 'pig51_exp10_normal.mat'
-dataFileAndRoot = dataRoot + dataFile
+# dataFile = 'pig72_exp9_aydin_recording_stim_Elec_FEVT_000'
+dataFileAndRoot = cg.dataRoot + dataFile
 
 """
 Gastric data normal

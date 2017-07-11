@@ -288,6 +288,7 @@ class GuiWindowDocks:
         """
         Classify the test data here
         """
+        print("self.trainingData.plotDat[0:self.trainingData.plotLength, :]: ", self.trainingData.plotDat[0:self.trainingData.plotLength, :])
         cnn = ClassifySlowWaveCNN(self.trainingData.plotDat[0:self.trainingData.plotLength, :], self.trainingData.plotEvent[0:self.trainingData.plotLength, :])
         preds = cnn.classify_data(sample_np, 1)
         prediction = np.zeros((1, len(test_data)));

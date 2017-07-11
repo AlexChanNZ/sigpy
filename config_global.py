@@ -10,6 +10,9 @@ training_file_name = 'training_data.arff'
 test_file_name = 'test_data.arff'
 loaded_data_file = 'junk.mat'
 
+
+global dataRoot
+dataRoot = '/Users/m/_/Data/sigpy/'
 current_working_directory = os.getcwd()
 
 
