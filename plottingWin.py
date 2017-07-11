@@ -15,8 +15,9 @@ import config_global as cg
 Gastric data pacing
 """
 
-dataFile = 'pig51_exp10_normal.mat'
+dataFile = 'normal/pig51_exp10_normal.mat'
 # dataFile = 'pig72_exp9_aydin_recording_stim_Elec_FEVT_000'
+
 dataFileAndRoot = cg.dataRoot + dataFile
 
 """

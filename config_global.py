@@ -12,8 +12,8 @@ loaded_data_file = 'junk.mat'
 
 
 global dataRoot
-dataRoot = '/Users/m/_/Data/sigpy/'
 current_working_directory = os.getcwd()
+dataRoot = current_working_directory + '/data/'
 
 
 def set_training_file_name(new_name):

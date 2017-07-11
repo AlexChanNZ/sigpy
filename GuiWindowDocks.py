@@ -11,8 +11,8 @@ from multiprocessing import Process
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.dockarea import *
-# import cPickle as pickle # Python3 
-import pickle
+import cPickle as pickle  
+# import pickle # TM EDIT for python3
 import matplotlib as mpl 
 mpl.use('TkAgg')
 import matplotlib.pyplot as plt
