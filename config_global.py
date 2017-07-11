@@ -14,6 +14,7 @@ loaded_data_file = 'junk.mat'
 global dataRoot
 current_working_directory = os.getcwd()
 dataRoot = current_working_directory + '/data/'
+nnPath = current_working_directory + '/config/'
 
 
 def set_training_file_name(new_name):
