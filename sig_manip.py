@@ -8,23 +8,41 @@ import numpy as np
 import scipy.io as sio
 
 import config_global as cg
+from sklearn.preprocessing import scale # for normalisation between 0 and 1
 
 
 
+def first_clip(inData, minVal, maxVal) :
+	outData = np.clip(inData, minVal, maxVal)
+	print("First clip: ",outData[0,200:240])
+	print("outData.shape: ", outData.shape)
 
-def normalise_chan_data(chanData):
+	return outData
 
-	print("chanData.shape",chanData.shape)
-	normedData = (chanData - chanData.mean(axis=0)) / chanData.std(axis=0)
-	print("normedData.shape",normedData.shape)
+
+
+def second_clip(secData) : #Shameer's secret sauce
+	massagedData = (secData - secData.mean(axis=0)) * (4*(secData.std(axis=0)))
+	print("massagedData: ", massagedData[200:240])
+	print("massagedData.shape: ", massagedData.shape)
+
+	return massagedData
+
+
+
+def normalise_chan_data(chanData) :
+	# Clip between -2, 2 mv and Shameers normalisation
+	clippedData = second_clip(first_clip(chanData,-2000, 2000))
+
+	# Classic normalisation [0,1]
+	normedData = (clippedData - np.max(clippedData))/-np.ptp(clippedData)
+	print("Normed data:" , normedData[200:240])
+	print("normedData.shape: ", normedData.shape)
 
 	return normedData
 
 
-
-
-def preprocess(chanData):
-
+def preprocess(chanData) :
 	return normalise_chan_data(chanData)
 
 

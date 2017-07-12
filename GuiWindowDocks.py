@@ -141,9 +141,22 @@ class GuiWindowDocks:
         self.analyseInternal = QtGui.QPushButton('Analyse Events')
         self.save_trained_data = QtGui.QPushButton('Save Training')
         self.load_trained_data = QtGui.QPushButton('Load Training')
-        self.is_pacing = QtGui.QRadioButton('Pacing data')
-        self.is_normal = QtGui.QRadioButton('Normal data')
-        self.is_normal.setChecked(True);
+
+        # self.dataTypeLayout=QtGui.QHBoxLayout()  # layout for the central widget
+        # self.dataTypeWidget=QtGui.QWidget(self)  # central widget
+        # self.dataTypeWidget.setLayout(self.dataTypeLayout)
+
+        self.dataType=QtGui.QButtonGroup(w1) 
+
+
+        self.is_pacing = QtGui.QRadioButton('Pacing')
+        self.is_normal = QtGui.QRadioButton('Normal')
+        self.is_normal.setChecked(1);
+
+        self.dataType.addButton(self.is_pacing, 0)
+        self.dataType.addButton(self.is_normal, 1)
+        self.dataType.setExclusive(True)
+
 
         w1.addWidget(label, row=self.add_one(), col=0)
         # w1.addWidget(self.loadRawData, row=self.add_one(), col=0)
@@ -365,6 +378,8 @@ class GuiWindowDocks:
     def analyse_internal(self):
         self.s1.clear()
         self.s2.clear()
+
+        self.statBar.showMessage("Training and classifying.")
         
         test_data = np.reshape(self.data, -1)
         
@@ -383,9 +398,10 @@ class GuiWindowDocks:
         """
         Classify the test data here
         """
-        print("self.trainingData.plotDat[0:self.trainingData.plotLength, :]: ", self.trainingData.plotDat[0:self.trainingData.plotLength, :])
         cnn = ClassifySlowWaveCNN(self.trainingData.plotDat[0:self.trainingData.plotLength, :], self.trainingData.plotEvent[0:self.trainingData.plotLength, :])
-        preds = cnn.classify_data(sample_np, 1)
+
+        preds = cnn.classify_data(sample_np, self.is_normal.isChecked())
+        print("Button val of data: ", self.dataType.checkedButton)
         prediction = np.zeros((1, len(test_data)));
         
         """
@@ -434,8 +450,8 @@ class GuiWindowDocks:
         self.s1.addPoints(x=pos_np[1], y=(pos_np[0] * 1.2))
         self.s2.addPoints(x=pos_np[1], y=(pos_np[0] * 1.2))
 
-        print("pos_np: ", pos_np)
-        print("pos_np.shape: ", pos_np.shape)
+        # print("pos_np: ", pos_np)
+        # print("pos_np.shape: ", pos_np.shape)
 
 
 
@@ -457,7 +473,7 @@ class GuiWindowDocks:
     def load_file_selector__gui_set_data(self):
         # filenames = QtGui.QFileDialog.getOpenFileNames(self.loadAction, "Select File", "", "*.txt")
         cg.dataForAnalysisFileName = QtGui.QFileDialog.getOpenFileName(None, "Select File", "", "*.mat")[0]
-        self.statBar.showMessage("Loading . . . ")
+        self.statBar.showMessage("Loading . . . ", 1000)
         print("cg.dataForAnalysisFileName: ", cg.dataForAnalysisFileName)        
         load_GEMS_file_for_analysis(cg.dataForAnalysisFileName)
 
@@ -474,6 +490,7 @@ class GuiWindowDocks:
 
         self.repaint_plots()
         self.setData(cg.sigData['normData'][0:12, 0:150001], 10, 15000)
+        self.is_normal.setChecked(1)
 
         self.statBar.showMessage("Finished repainting plots!", 2000)
 

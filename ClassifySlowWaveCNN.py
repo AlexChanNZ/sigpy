@@ -76,10 +76,13 @@ class ClassifySlowWaveCNN:
 
         if self.label_array.size == 0:
 
-            if (type_data_set == 0):
+            if (type_data_set):
+                print("Using Normal CNN")
                 nnFileName = "nn_normal.cnn"
 
-            elif (type_data_set == 1):
+            elif (type_data_set == False):
+                print("Using Pacing CNN")
+
                 nnFileName = "nn_pacing.cnn"
 
             else:
