@@ -31,8 +31,6 @@ class ClassifySlowWaveCNN:
         self.train_array = np.asarray(training_set).reshape((-1,1,6,6))
         self.label_array = np.asarray(events)
 
-
-
     def classify_data(self, test_data, type_data_set):
         """
         The data is classified based on the training data.
@@ -47,8 +45,6 @@ class ClassifySlowWaveCNN:
 
         return prediction
         
-
-
     def load_training_dataset(self, dataType):
         trainingDataPath = cg.dataRoot + '/' + dataType
         nFiles = 0
@@ -79,10 +75,13 @@ class ClassifySlowWaveCNN:
     def train_neural_net(self, type_data_set):
 
         if self.label_array.size == 0:
+
             if (type_data_set == 0):
                 nnFileName = "nn_normal.cnn"
+
             elif (type_data_set == 1):
                 nnFileName = "nn_pacing.cnn"
+
             else:
                 print("No type selected")  
                 return
@@ -115,6 +114,7 @@ class ClassifySlowWaveCNN:
             X_train = np.append(X_train, self.train_array, axis=0)
             print(X_train.shape)
             y_train = np.append(y_train, self.label_array.transpose())
+
             nn = NeuralNet(
                 layers=[('input', layers.InputLayer),
                         ('conv2d1', layers.Conv2DLayer),

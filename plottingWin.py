@@ -32,13 +32,15 @@ Intestine data
 
 mat_contents = sio.loadmat(dataFileAndRoot)
 print(mat_contents)
-
+ 
 cg.set_data_file_name((dataFileAndRoot.rsplit('/', 1)[1]))
 cg.set_test_file_name(str(cg.loaded_data_file) + str('_test.arff'))
 cg.set_training_file_name(str(cg.loaded_data_file) + str('_training.arff'))
 cg.set_trained_file(str(cg.loaded_data_file) + str('_trained.dat'))
 
 vals = np.array(mat_contents['bdfdat'])
+print("vals.shape:",vals.shape)
+cg.set_data_for_analysis(vals)
 #vals = np.array(mat_contents['mark_cardiac'])
 
 # Start Qt event loop unless running in interactive mode.
