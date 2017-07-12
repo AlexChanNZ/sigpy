@@ -175,9 +175,6 @@ class GuiWindowDocks:
 
 
 
-
-
-
     def addDockWidgetsPlots(self):
 
         self.w1 = pg.PlotWidget(title="Plots of the slow-wave data")
@@ -477,8 +474,6 @@ class GuiWindowDocks:
         print("cg.dataForAnalysisFileName: ", cg.dataForAnalysisFileName)        
         load_GEMS_file_for_analysis(cg.dataForAnalysisFileName)
 
-
-
         self.statBar.showMessage("Finished loading! Now preprocessing . . .")
 
         cg.sigData['normData'] = preprocess(cg.dataForAnalysis['SigPy']['filtData'])
@@ -489,7 +484,7 @@ class GuiWindowDocks:
 
 
         self.repaint_plots()
-        self.setData(cg.sigData['normData'][0:12, 0:150001], 10, 15000)
+        self.setData(cg.sigData['normData'], cg.sigData['normData'].shape[0], cg.sigData['normData'].shape[1])
         self.is_normal.setChecked(1)
 
         self.statBar.showMessage("Finished repainting plots!", 2000)

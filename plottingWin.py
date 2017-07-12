@@ -50,6 +50,6 @@ if __name__ == '__main__':
     """
     Create data here and add to the curve
     """
-    gui.setData(vals[0:12, 0:15001], 10, 15000)
+    gui.setData(vals, vals.shape[0], vals.shape[1])
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
