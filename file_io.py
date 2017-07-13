@@ -72,25 +72,32 @@ def update_GEMS_data_with_TOAs(pos_np, nChans) :
 
     for sampleIndex, sampleChan in zip(pos_np[1], pos_np[0]) :
 
-        if (sampleIndex > 0) :
-            toaChanIndices.append(sampleIndex)
-            timestamp = cg.dataForAnalysis['SigPy']['timeBetweenSamples'] * sampleIndex + cg.dataForAnalysis['SigPy']['timeStart']
-            toaChanTimeStamps.append(round(timestamp[0][0],4))
+
         
         print("sampleIndex: ", sampleIndex)
 
         if not (int(sampleChan) == int(lastSampleChan)) and (lastSampleChan > -1):
+            if (sampleIndex > 0) :
+                toaChanIndices.append(sampleIndex)
+                timestamp = cg.dataForAnalysis['SigPy']['timeBetweenSamples'] * sampleIndex + cg.dataForAnalysis['SigPy']['timeStart']
+                toaChanTimeStamps.append(round(timestamp[0][0],4))       
+
             print("toaChanIndices: ", toaChanIndices)        
             print("toaChanTimeStamps: ", toaChanTimeStamps)   
 
             if (len(toaChanIndices) > 0) :
                 toaIndx[lastSampleChan] = np.array(toaChanIndices).astype(dtype=float)
                 toaCell[lastSampleChan] = np.array(toaChanTimeStamps).astype(dtype=float)
-                
 
             toaChanIndices = []
-            toaChanTimeStamps = []           
-
+            toaChanTimeStamps = []
+                           
+        else:
+            if (sampleIndex > 0) :
+                toaChanIndices.append(sampleIndex)
+                timestamp = cg.dataForAnalysis['SigPy']['timeBetweenSamples'] * sampleIndex + cg.dataForAnalysis['SigPy']['timeStart']
+                toaChanTimeStamps.append(round(timestamp[0][0],4))       
+            
         lastSampleChan = sampleChan
 
 
