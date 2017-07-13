@@ -9,6 +9,7 @@ import scipy.io as sio
 
 import config_global as cg
 
+# np.set_printoptions(linewidth=1000, precision=3, threshold=np.inf)
 
 
 
@@ -37,7 +38,7 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath):
         cg.dataForAnalysis['SigPy']['sampleRate'] = cg.dataForAnalysis['toapp']['fs'][0,0]
         cg.dataForAnalysis['SigPy']['timeStart'] = cg.dataForAnalysis['toapp']['filstartT'][0,0]
         cg.dataForAnalysis['SigPy']['timeEnd'] = cg.dataForAnalysis['toapp']['Teof'][0,0]
-        cg.dataForAnalysis['SigPy']['timeBetweenSamples'] = 1 / cg.dataForAnalysis['SigPy']['sampleRate']
+        cg.dataForAnalysis['SigPy']['timeBetweenSamples'] = 1 / cg.dataForAnalysis['SigPy']['sampleRate'][0,0]
 
         # cg.dataForAnalysis['SigPy']['eData'] = cg.dataForAnalysis['toapp']['edata'][0,0]
 
@@ -46,16 +47,64 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath):
 
 def save_GEMS_SigPy_file(fileNameAndPath):
 
-
-
-
-    # cg.dataForAnalysis.pop('SigPy', None)
-    # cg.dataForAnalysis.pop('GEMSorig', None)
-
-
+    # To overwrite original GEMS data, comment this out to save.
+    cg.dataForAnalysis.pop('SigPy', None)
+    cg.dataForAnalysis.pop('GEMSorig_toapp', None)
+    cg.dataForAnalysis.pop('GEMSorig_bdfdef', None)
 
     # Save GEMS file
     sio.savemat(fileNameAndPath, cg.dataForAnalysis, appendmat = False)
+
+
+def update_GEMS_data_with_TOAs(pos_np, nChans) :
+
+    toaChanIndices = []
+    toaChanTimeStamps = []
+
+    iCount = 0
+    chanNum = 0
+    lastSampleChan = -1
+
+    toaIndx = np.zeros(shape=nChans, dtype=object)
+    toaCell = np.zeros(shape=nChans, dtype=object)
+
+    print("making TOA data for GEMS")
+
+    for sampleIndex, sampleChan in zip(pos_np[1], pos_np[0]) :
+
+        if (sampleIndex > 0) :
+            toaChanIndices.append(sampleIndex)
+            timestamp = cg.dataForAnalysis['SigPy']['timeBetweenSamples'] * sampleIndex + cg.dataForAnalysis['SigPy']['timeStart']
+            toaChanTimeStamps.append(round(timestamp[0][0],4))
+        
+        print("sampleIndex: ", sampleIndex)
+
+        if not (int(sampleChan) == int(lastSampleChan)) and (lastSampleChan > -1):
+            print("toaChanIndices: ", toaChanIndices)        
+            print("toaChanTimeStamps: ", toaChanTimeStamps)   
+
+            if (len(toaChanIndices) > 0) :
+                toaIndx[lastSampleChan] = np.array(toaChanIndices).astype(dtype=float)
+                toaCell[lastSampleChan] = np.array(toaChanTimeStamps).astype(dtype=float)
+                
+
+            toaChanIndices = []
+            toaChanTimeStamps = []           
+
+        lastSampleChan = sampleChan
+
+
+
+
+
+    print("toaIndx: ", toaIndx)        
+    print("toaCell: ", toaCell)  
+
+    cg.dataForAnalysis['SigPy']['toaIndx'] = toaIndx
+    cg.dataForAnalysis['SigPy']['toaCell'] = toaCell
+
+    cg.dataForAnalysis['toapp']['toaIndx'][0,0] = toaIndx
+    cg.dataForAnalysis['toapp']['toaCell'][0,0] = toaCell
 
 
  

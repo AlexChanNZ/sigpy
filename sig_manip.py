@@ -36,7 +36,6 @@ def normalise_chan_data(chanData) :
 
 	# Classic normalisation [0,1]
 	normedData = (clippedData - np.max(clippedData))/-np.ptp(clippedData)
-	print("Normed data:" , normedData[200:240])
 	print("normedData.shape: ", normedData.shape)
 
 	return normedData

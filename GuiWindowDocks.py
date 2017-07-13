@@ -37,8 +37,11 @@ from FeatureAnalyser import FeatureAnalyser
 from SlowWaveCNN import SlowWaveCNN
 import config_global as cg
 
-from file_io import load_GEMS_mat_into_SigPy, save_GEMS_SigPy_file
+from file_io import *
 from sig_manip import preprocess
+
+# For debugging purps
+
 
 
 
@@ -483,22 +486,30 @@ class GuiWindowDocks:
         linear_at = np.delete(linear_at_uncorrected, to_remove_index)
 
         pos = []
-        length = len(self.data[0])
+        lengthData = len(self.data[0])
+        nChans = self.data.shape[0]
         sync_events = []
 
         # Check for sync events
         for val in linear_at.transpose():
-            sync_events.append(int(val % length))
+            sync_events.append(int(val % lengthData))
         remove_sync_point = set([x for x in sync_events if sync_events.count(x) > 600])
+
         
         #remove_sync_point.clear()
 
         # Remove the sync events from the actual array
-        for val in linear_at.transpose():
-            if int(val % length) not in remove_sync_point:
-                pos.append([int(val/length), int(val % length)])
 
-        pos_np = np.asarray(pos).transpose()        
+        for val in linear_at.transpose():
+            if int(val % lengthData) not in remove_sync_point:
+                xIndex = int(val / lengthData)
+                yChannel = int(val % lengthData)
+                pos.append([xIndex, yChannel])
+
+        pos_np = np.asarray(pos).transpose()
+
+        print("self.data.shape: ", self.data.shape)
+        print("pos_np[1].size: ", pos_np[1].size)
 
         if pos_np.size is 0:
             print("No events detected")
@@ -507,14 +518,12 @@ class GuiWindowDocks:
         self.s1.addPoints(x=pos_np[1], y=(pos_np[0] * 1.2))
         self.s2.addPoints(x=pos_np[1], y=(pos_np[0] * 1.2))
 
-        # Add event marks to current data variable
-        cg.dataForAnalysis['SigPy']['toaIndx'] = pos_np[1].astype(dtype=float)
-        cg.dataForAnalysis['SigPy']['toaCell'] = cg.dataForAnalysis['SigPy']['timeBetweenSamples'] * pos_np[1]
 
-        cg.dataForAnalysis['toapp']['toaIndx'][0,0] = np.array(cg.dataForAnalysis['SigPy']['toaIndx'],dtype=object)
-        cg.dataForAnalysis['toapp']['toaCell'][0,0] = np.array(cg.dataForAnalysis['SigPy']['toaCell'],dtype=object)
+        # Convert event co-ordinates to indices for  2d TOA to output to GEMS
+        self.statBar.showMessage("Finished classifying slow wave events.", 1000)
 
-        self.statBar.showMessage("Finished classifying slow wave events.")
+        update_GEMS_data_with_TOAs(pos_np, nChans)      
+
 
         # print("pos_np: ", pos_np)
         # print("pos_np.shape: ", pos_np.shape)
