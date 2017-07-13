@@ -46,3 +46,9 @@ def preprocess(chanData) :
 	return normalise_chan_data(chanData)
 
 
+
+def indices_to_timestamps(indices):
+	return indices * timeBetweenSamples
+
+
+

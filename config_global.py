@@ -6,6 +6,9 @@
 import os
 import numpy as np
 
+import SigData as SigData
+
+
 # Set default files names
 training_file_name = 'training_data.arff'
 test_file_name = 'test_data.arff'
@@ -19,7 +22,6 @@ nnPath = current_working_directory + '/config/'
 dataForAnalysis = None # Raw import of data (likely a GEMS .mat file)
 dataForAnalysisFileName = None
 
-dataForAnalysisFileName = None
 
 
 sigData = {} # Data in format for analysis within SigPy
