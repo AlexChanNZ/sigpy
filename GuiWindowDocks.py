@@ -80,8 +80,7 @@ class GuiWindowDocks:
         self.elec = []
         self.data = []
 
-
-        self.set_plot_data(cg.sigData['normData'], cg.sigData['normData'].shape[0], cg.sigData['normData'].shape[1])
+        self.set_plot_data(cg.dataForAnalysis['SigPy']['normData'], cg.dataForAnalysis['SigPy']['normData'].shape[0], cg.dataForAnalysis['SigPy']['normData'].shape[1])
 
         self.trainingDataPlot = TrainingDataPlot()
         
@@ -553,7 +552,7 @@ class GuiWindowDocks:
 
         self.statBar.showMessage("Finished loading! Now preprocessing . . .")
 
-        cg.sigData['normData'] = preprocess(cg.dataForAnalysis['SigPy']['filtData'])
+        cg.dataForAnalysis['SigPy']['normData'] = preprocess(cg.dataForAnalysis['SigPy']['filtData'])
         self.statBar.showMessage("Finished pre-processing! Now repainting plots . . . ")
 
         print("cg.sigData['normData']: ", cg.sigData['normData'])
@@ -562,7 +561,7 @@ class GuiWindowDocks:
 
         self.repaint_plots()
         # Set plot data
-        self.set_plot_data(cg.sigData['normData'], cg.sigData['normData'].shape[0], cg.sigData['normData'].shape[1])
+        self.set_plot_data(cg.dataForAnalysis['SigPy']['normData'], cg.dataForAnalysis['SigPy']['normData'].shape[0], cg.dataForAnalysis['SigPy'].shape[1])
         self.btnIsNormal.setChecked(1)
 
         self.statBar.showMessage("Finished repainting plots!", 2000)
@@ -573,8 +572,6 @@ class GuiWindowDocks:
         cg.dataForAnalysisFileName = QtGui.QFileDialog.getSaveFileName(None, "Save As File", cg.dataForAnalysisFileName, "*.mat")[0]
         self.statBar.showMessage("Saving . . . ")
         print("cg.dataForAnalysisFileName: ", cg.dataForAnalysisFileName) 
-
-
 
         save_GEMS_SigPy_file(cg.dataForAnalysisFileName)
 
