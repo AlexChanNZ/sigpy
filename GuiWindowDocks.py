@@ -583,7 +583,9 @@ class GuiWindowDocks:
 
     def save_as_file_selector(self):
 
-        cg.dataForAnalysisFileName = QtGui.QFileDialog.getSaveFileName(None, "Save As File", cg.dataForAnalysisFileName, "*.mat")[0]
+        cg.dataForAnalysisFileName = QtGui.QFileDialog.getSaveFileName(None, "Save As File", cg.dataForAnalysisFileName, "*.mat")
+        if not (platformName == "linux2") :
+            cg.dataForAnalysisFileName = cg.dataForAnalysisFileName[0]        
         self.statBar.showMessage("Saving . . . ")
         print("cg.dataForAnalysisFileName: ", cg.dataForAnalysisFileName) 
 
