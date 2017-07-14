@@ -86,7 +86,7 @@ class SlowWaveCNN:
             elif (type_data_set == False):
                 print("Using Pacing CNN")
 
-                nnFileName = "nn_btnPacing.cnn"
+                nnFileName = "nn_pacing.cnn"
 
             else:
                 print("No type selected")  

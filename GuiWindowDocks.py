@@ -133,7 +133,7 @@ class GuiWindowDocks:
         self.fileMenu.addAction(self.saveAction)    
 
         ## Exit 
-        self.quitAction = QtGui.QAction('Leave', self.fileMenu)        
+        self.quitAction = QtGui.QAction('Close', self.fileMenu)        
         self.quitAction.setStatusTip('Quit the program')
         self.quitAction.setShortcut('Ctrl+Q')
         self.quitAction.triggered.connect(lambda: self.exit_app())
