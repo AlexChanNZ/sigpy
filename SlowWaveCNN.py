@@ -109,8 +109,8 @@ class SlowWaveCNN:
                 X_train, y_train = self.load_training_dataset("normal")
 
             elif (type_data_set == 1):
-                X_train, y_train = self.load_training_dataset("btnPacing")
-                nnFileName = "nn_btnPacing.cnn"
+                X_train, y_train = self.load_training_dataset("pacing")
+                nnFileName = "nn_pacing.cnn"
 
             else:
                 print("No training type selected")
