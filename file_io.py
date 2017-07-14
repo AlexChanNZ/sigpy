@@ -57,7 +57,7 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath):
 def save_GEMS_SigPy_file(fileNameAndPath):
 
     # To overwrite original GEMS data, comment this out to save GEMS data as backup.
-    cg.dataForAnalysis.pop('SigPy', None)
+    # cg.dataForAnalysis.pop('SigPy', None)
     cg.dataForAnalysis.pop('GEMSorig_toapp', None)
     cg.dataForAnalysis.pop('GEMSorig_bdfdef', None)
     cg.dataForAnalysis.pop('bdfdef', None) #popping bdfdef because of UI control compatibility.

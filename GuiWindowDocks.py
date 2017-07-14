@@ -6,6 +6,7 @@
 """
 import sys
 import numpy as np
+import platform
 
 from multiprocessing import Process
 # Main GUI support
@@ -546,10 +547,19 @@ class GuiWindowDocks:
         self.w3.setYRange(-10, 10, padding=0)
 
 
-    ## MENU BAR ACTIONS
+
+
+    ## ==== MENU BAR ACTIONS ====
+
     def load_file_selector__gui_set_data(self):
         # filenames = QtGui.QFileDialog.getOpenFileNames(self.loadAction, "Select File", "", "*.txt")
-        cg.dataForAnalysisFileName = QtGui.QFileDialog.getOpenFileName(None, "Select File", "", "*.mat")[0]
+        cg.dataForAnalysisFileName = QtGui.QFileDialog.getOpenFileName(None, "Select File", "", "*.mat")
+        platformName = sys.platform
+        print("platformName: ",platformName)
+
+        if not (platformName == "linux2") :
+            cg.dataForAnalysisFileName = cg.dataForAnalysisFileName[0]
+
         self.statBar.showMessage("Loading . . . ", 1000)
         print("cg.dataForAnalysisFileName: ", cg.dataForAnalysisFileName)        
         load_GEMS_mat_into_SigPy(cg.dataForAnalysisFileName)
@@ -559,13 +569,13 @@ class GuiWindowDocks:
         cg.dataForAnalysis['SigPy']['normData'] = preprocess(cg.dataForAnalysis['SigPy']['filtData'])
         self.statBar.showMessage("Finished pre-processing! Now repainting plots . . . ")
 
-        print("cg.sigData['normData']: ", cg.sigData['normData'])
+        # print("cg.dataForAnalysis['SigPy']['normData']: ", cg.dataForAnalysis['SigPy']['normData'])
         # self.trainingDataPlot = TrainingDataPlot()
 
 
         self.repaint_plots()
         # Set plot data
-        self.set_plot_data(cg.dataForAnalysis['SigPy']['normData'], cg.dataForAnalysis['SigPy']['normData'].shape[0], cg.dataForAnalysis['SigPy'].shape[1])
+        self.set_plot_data(cg.dataForAnalysis['SigPy']['normData'], cg.dataForAnalysis['SigPy']['normData'].shape[0], cg.dataForAnalysis['SigPy']['normData'].shape[1])
         self.btnIsNormal.setChecked(1)
 
         self.statBar.showMessage("Finished repainting plots!", 2000)
