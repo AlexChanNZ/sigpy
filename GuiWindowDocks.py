@@ -4,7 +4,7 @@
     Author: Shameer Sathar
     Description: Provide Gui Interface.
 """
-
+import sys
 import numpy as np
 
 from multiprocessing import Process
@@ -36,14 +36,10 @@ from WekaInterface import WekaInterface
 from FeatureAnalyser import FeatureAnalyser
 from SlowWaveCNN import SlowWaveCNN
 import config_global as cg
-
 from file_io import *
 from sig_manip import preprocess
 
 # For debugging purps
-
-
-
 
 class GuiWindowDocks:
     def __init__(self):
@@ -112,7 +108,7 @@ class GuiWindowDocks:
         self.fileMenu = self.mainMenu.addMenu('&File')
 
         ## Load file
-        self.loadAction = QtGui.QAction('&Load GEMS data', self.fileMenu)        
+        self.loadAction = QtGui.QAction('&Load GEMS .mat', self.fileMenu)        
         self.loadAction.setShortcut('Ctrl+L')
         self.loadAction.setStatusTip('')
         self.loadAction.triggered.connect(lambda: self.load_file_selector__gui_set_data())
@@ -120,9 +116,9 @@ class GuiWindowDocks:
         self.fileMenu.addAction(self.loadAction)
 
 
-        ## Save AS gems file 
-        self.saveAsAction = QtGui.QAction('&Save as GEMS data', self.fileMenu)        
-        self.saveAsAction.setStatusTip('')
+        ## Save as gems file 
+        self.saveAsAction = QtGui.QAction('&Save as GEMS .mat', self.fileMenu)        
+        self.saveAsAction.setStatusTip('Save data with filename.')
         self.saveAsAction.triggered.connect(lambda: self.save_as_file_selector())
 
         self.fileMenu.addAction(self.saveAsAction)
@@ -131,10 +127,18 @@ class GuiWindowDocks:
         ## Save (update file)
         self.saveAction = QtGui.QAction('&Save', self.fileMenu)
         self.saveAction.setShortcut('Ctrl+S')
-        self.saveAction.setStatusTip('')
+        self.saveAction.setStatusTip('Overwrite currently loaded file.')
         self.saveAction.triggered.connect(lambda: self.save_file_selector())
 
         self.fileMenu.addAction(self.saveAction)    
+
+        ## Exit 
+        self.quitAction = QtGui.QAction('Leave', self.fileMenu)        
+        self.quitAction.setStatusTip('Quit the program')
+        self.quitAction.setShortcut('Ctrl+Q')
+        self.quitAction.triggered.connect(lambda: self.exit_app())
+
+        self.fileMenu.addAction(self.quitAction)
 
 
 
@@ -568,7 +572,7 @@ class GuiWindowDocks:
 
 
     def save_as_file_selector(self):
-        # filenames = QtGui.QFileDialog.getOpenFileNames(self.loadAction, "Select File", "", "*.txt")
+
         cg.dataForAnalysisFileName = QtGui.QFileDialog.getSaveFileName(None, "Save As File", cg.dataForAnalysisFileName, "*.mat")[0]
         self.statBar.showMessage("Saving . . . ")
         print("cg.dataForAnalysisFileName: ", cg.dataForAnalysisFileName) 
@@ -584,3 +588,8 @@ class GuiWindowDocks:
         save_GEMS_SigPy_file(cg.dataForAnalysisFileName)
 
         self.statBar.showMessage("Saved file!")
+
+
+    def exit_app(self) :
+        self.win.close()
+        sys.exit()

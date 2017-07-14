@@ -5,14 +5,19 @@
     Description: GUI for training and plotting the activation times.
 """
 
+# External dependencies
 from pyqtgraph.Qt import QtGui, QtCore
 from GuiWindowDocks import GuiWindowDocks
 import numpy as np
 import scipy.io as sio
-import config_global as cg
+import sys
 
+# Internal dependencies
+import config_global as cg
 from file_io import load_GEMS_mat_into_SigPy
 from sig_manip import preprocess
+
+
 
 
 """
@@ -60,3 +65,6 @@ if __name__ == '__main__':
     # Set plot data
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
+
+    sys.exit()
+
