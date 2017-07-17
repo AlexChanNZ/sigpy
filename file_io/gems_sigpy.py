@@ -20,7 +20,7 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath):
     :return: predictions for the entire data set
     """
 
-    cg.dataForAnalysis = sio.loadmat(fileNameAndPath)
+    cg.dataForAnalysis = sio.loadmat(fileNameAndPath, matlab_compatible=True) #added matlab_compatible=True to aid GEMS compatibility
 
     # Check if this file has been saved from SigPy and whether it has been copied
     if hasattr(cg.dataForAnalysis, 'GEMSorig_toapp'):
@@ -47,7 +47,7 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath):
 
     # print('cg.dataForAnalysis[toapp][orientedElec]:', cg.dataForAnalysis['toapp']['orientedElec'][0,0]
 
-        # cg.dataForAnalysis['SigPy']['eData'] = cg.dataForAnalysis['toapp']['edata'][0,0]
+    # cg.dataForAnalysis['SigPy']['eData'] = cg.dataForAnalysis['toapp']['edata'][0,0]
 
     # print("cg.sigData['eData'].shape: ", cg.sigData['eData'].shape)
 
@@ -58,10 +58,11 @@ def save_GEMS_SigPy_file(fileNameAndPath):
     # cg.dataForAnalysis.pop('SigPy', None)
     cg.dataForAnalysis.pop('GEMSorig_toapp', None)
     cg.dataForAnalysis.pop('GEMSorig_bdfdef', None)
-    cg.dataForAnalysis.pop('bdfdef', None) #popping bdfdef because of UI control compatibility.
+    # cg.dataForAnalysis.pop('bdfdef', None) #popping bdfdef because of UI control compatibility. 
+    #EDIT: Appears saving UIControl component as struct still works in GEMS.
 
     # Save GEMS file
-    sio.savemat(fileNameAndPath, cg.dataForAnalysis, appendmat = False)
+    sio.savemat(fileNameAndPath, cg.dataForAnalysis)
 
 
 def update_GEMS_data_with_TOAs(pos_np, nChans) :

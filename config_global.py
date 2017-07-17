@@ -6,8 +6,6 @@
 import os
 import numpy as np
 
-import SigData as SigData
-
 
 # Set default files names
 training_file_name = 'training_data.arff'
@@ -17,7 +15,7 @@ loaded_data_file = 'junk.mat'
 current_working_directory = os.getcwd()
 
 dataRoot = current_working_directory + '/data/'
-nnPath = current_working_directory + '/config/'
+nnPath = current_working_directory + '/ml_models/'
 
 dataForAnalysis = None # Raw import of data (likely a GEMS .mat file)
 dataForAnalysisFileName = None

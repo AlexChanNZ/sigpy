@@ -164,14 +164,11 @@ class SlowWaveCNN:
             y_train = y_train.astype(np.int32)
             self.neural_net = nn.fit(X_train, y_train.flatten())
 
-            
-
             pickle.dump(self.neural_net, open(nnFileNameAndPath, "wb"))
 
 
-        
-    def train_and_classify(cnn, plotData, cnnType=None):
 
+    def train_and_classify(cnn, plotData, cnnType=None):
 
         return pos_np
 
