@@ -74,22 +74,25 @@ def update_GEMS_data_with_TOAs(pos_np, nChans) :
     chanNum = 0
     lastSampleChan = -1
 
-    toaIndx = np.zeros(shape=nChans, dtype=object)
-    toaCell = np.zeros(shape=nChans, dtype=object)
+    toaIndx = np.empty(shape=nChans, dtype=object)
+    toaCell = np.empty(shape=nChans, dtype=object)
+
+    #Initialise toaIndxs as empty 
+    #Note: np.empty array comes up as None which is not compatible with MATLAB.
+    for chanI in range(0, nChans):
+        toaIndx[chanI] = np.array([])
+        toaCell[chanI] = np.array([])
 
     print("making TOA data for GEMS")
 
+
+
+    ## Iterate through indexes and chans and convert to ToA and GEMS compatible indexes
     for sampleIndex, sampleChan in zip(pos_np[1], pos_np[0]) :
         
         print("sampleIndex: ", sampleIndex)
 
-        if not (int(sampleChan) == int(lastSampleChan)) and (lastSampleChan > -1):
-
-            if (sampleIndex > 0) :
-
-                toaChanIndices.append(sampleIndex)
-                timestamp = cg.dataForAnalysis['SigPy']['timeBetweenSamples'] * sampleIndex + cg.dataForAnalysis['SigPy']['timeStart']
-                toaChanTimeStamps.append(round(timestamp[0][0],4))       
+        if not (int(sampleChan) == int(lastSampleChan)) and (lastSampleChan > -1):  
 
             print("toaChanIndices: ", toaChanIndices)        
             print("toaChanTimeStamps: ", toaChanTimeStamps)   
@@ -102,13 +105,12 @@ def update_GEMS_data_with_TOAs(pos_np, nChans) :
             toaChanIndices = []
             toaChanTimeStamps = []
 
-        else:
 
-            if (sampleIndex > 0) :
+        if (sampleIndex > 0) :
 
-                toaChanIndices.append(sampleIndex)
-                timestamp = cg.dataForAnalysis['SigPy']['timeBetweenSamples'] * sampleIndex + cg.dataForAnalysis['SigPy']['timeStart']
-                toaChanTimeStamps.append(round(timestamp[0][0],4))       
+            toaChanIndices.append(sampleIndex)
+            timestamp = cg.dataForAnalysis['SigPy']['timeBetweenSamples'] * sampleIndex + cg.dataForAnalysis['SigPy']['timeStart']
+            toaChanTimeStamps.append(round(timestamp[0][0],4))       
             
         lastSampleChan = sampleChan
 
