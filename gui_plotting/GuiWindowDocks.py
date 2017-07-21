@@ -125,7 +125,7 @@ class GuiWindowDocks:
         self.fileMenu.addAction(self.saveAsAction)
 
 
-        ## Save (update file)
+        ## Save (update existing file)
         self.saveAction = QtGui.QAction('&Save', self.fileMenu)
         self.saveAction.setShortcut('Ctrl+S')
         self.saveAction.setStatusTip('Overwrite currently loaded file.')
@@ -217,6 +217,8 @@ class GuiWindowDocks:
             self.curves_right.append(c2)
             self.w2.addItem(c2)
 
+
+
         self.s1 = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 255, 255, 120))
         self.s2 = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 255, 255, 120))
         self.w1.addItem(self.s1)
@@ -255,8 +257,6 @@ class GuiWindowDocks:
     def set_curve_item(self, nPlots, nSamples):
         self.w1.setYRange(0, 100)
         self.w1.setXRange(0, 3000)    
-
-
             
         for i in range(nPlots):
             c1 = pg.PlotCurveItem(pen=(i, nPlots*1.3))
@@ -272,11 +272,13 @@ class GuiWindowDocks:
             self.curves_right.append(c2)
             self.w2.showGrid(x=True, y=True)
             self.w2.resize(600, 10)
+
         self.updatePlot()
 
 
 
     def set_plot_data(self, data, nPlots, nSize):
+        
         self.data = data
         # self.trainingDataPlot.set_plot_data(data)
         self.set_curve_item(nPlots, nSize)

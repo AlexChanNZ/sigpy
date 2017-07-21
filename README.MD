@@ -4,7 +4,8 @@ SigPy is a python framework and GUI for using machine-learning methods to analys
 
 
 ### Installing and running
-pip install -r requirements.txt
+pip install -r requirements.txt 
+
 Run main_SigPy.py
 
 ### Prerequisites

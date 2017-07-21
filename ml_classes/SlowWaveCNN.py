@@ -2,18 +2,21 @@
 """
 Author : Shameer Sathar
 """
+import sys, os # to browse directories
+
 import cPickle as pickle
 # import six.moves.cPickle as pickle
 
 import numpy as np
 import scipy.io as sio
 import theano
+
+
+
+# from theano.tensor.signal import downsample 
+# need to swap above import with these below two for more recent version of theano
 from theano.tensor.signal import pool
 from theano.tensor.signal.pool import pool_2d
-
-import sys, os # to browse directories
-
-# from theano.tensor.signal import downsample
 
 import lasagne
 from lasagne import layers
@@ -22,13 +25,23 @@ from lasagne.updates import nesterov_momentum
 from nolearn.lasagne import NeuralNet
 from nolearn.lasagne import visualize
 
+# User defined imports
+from gui_plotting.mpl_plots import *
+
 import config_global as cg
 
 class SlowWaveCNN:
 
-    def __init__(self, training_set, events):
-        self.train_array = np.asarray(training_set).reshape((-1,1,6,6))
-        self.label_array = np.asarray(events)
+    def __init__(self, training_set=None, events=None):
+        if training_set:
+            self.train_array = np.asarray(training_set).reshape((-1,1,6,6))
+        else:
+            self.train_array = np.array([])
+
+        if events:
+            self.label_array = np.asarray(events)
+        else:
+            self.label_array = np.array([])
 
 
 
@@ -54,24 +67,35 @@ class SlowWaveCNN:
 
         for trainingFile in os.listdir(trainingDataPlotPath):
 
-            nFiles+=1
             trainingFileAndPath = trainingDataPlotPath + "/" + trainingFile
+
             print("trainingFileAndPath: ",trainingFileAndPath)
-            data_dic = sio.loadmat(trainingFileAndPath)
-            data_samples = np.array(data_dic['samples'])
-            data_labels = np.array(data_dic['label'])
 
+            if ".mat" in trainingFileAndPath:
+                nFiles+=1
 
-            if nFiles > 1:
-                X_train = np.append(X_train, data_samples[0:2000,:])
-                y_train = np.append(y_train, data_labels[0:2000,:])
-            else:
-                X_train = data_samples[0:2000,:]
-                y_train = data_labels[0:2000,:]              
+                data_dic = sio.loadmat(trainingFileAndPath)
+                try:
+                    trainingSamples = np.array(data_dic['samples'])
+                    trainingLabels = np.array(data_dic['label'])
+
+                    if nFiles > 1:
+
+                        X_train = np.append(X_train, trainingSamples[0:2000,:])
+                        Y_train = np.append(Y_train, trainingLabels[0:2000,:])
+
+                    else:
+
+                        X_train = trainingSamples[0:2000,:]
+                        Y_train = trainingLabels[0:2000,:]        
+                except Exception,e:
+                    print("Exception: ", e)      
+                    print("Caused by file: ", trainingFile)      
+
         
         X_train = X_train.reshape((-1, 1, 6, 6))
 
-        return X_train, y_train
+        return X_train, Y_train
         
 
 
@@ -106,20 +130,21 @@ class SlowWaveCNN:
             print("Training neural net")
                 
             if (type_data_set == 0):
-                X_train, y_train = self.load_training_dataset("normal")
+                X_train, Y_train = self.load_training_dataset("normal")
 
             elif (type_data_set == 1):
-                X_train, y_train = self.load_training_dataset("pacing")
+                X_train, Y_train = self.load_training_dataset("pacing")
                 nnFileName = "nn_pacing.cnn"
 
             else:
                 print("No training type selected")
 
-            print(X_train.shape)
-            print(self.train_array.shape)
-            X_train = np.append(X_train, self.train_array, axis=0)
-            print(X_train.shape)
-            y_train = np.append(y_train, self.label_array.transpose())
+            # I believe the below lines aren't needed anymore
+            # print(X_train.shape)
+            # print(self.train_array.shape)
+            # X_train = np.append(X_train, self.train_array, axis=0)
+            # print(X_train.shape)
+            # Y_train = np.append(Y_train, self.label_array.transpose())
 
             nn = NeuralNet(
                 layers=[('input', layers.InputLayer),
@@ -159,10 +184,12 @@ class SlowWaveCNN:
             )
 
             # Train the network
-            print(X_train.shape)
-            print(y_train.shape)
-            y_train = y_train.astype(np.int32)
-            self.neural_net = nn.fit(X_train, y_train.flatten())
+            print("X_train.shape: ", X_train.shape)
+            print("Y_train.shape: ", Y_train.shape)
+            print("X_train[1,:,:,:]", X_train[1,:,:,:])
+
+            Y_train = Y_train.astype(np.int32)
+            self.neural_net = nn.fit(X_train, Y_train.flatten())
 
             pickle.dump(self.neural_net, open(nnFileNameAndPath, "wb"))
 
