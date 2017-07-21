@@ -80,10 +80,10 @@ if __name__ == '__main__':
     trainNonSWimages = plot_swImage_grid(trainingSWdata, invert_ones_zeros(trainingSWlabels), linePlot=False, iTitle="Train data non-SWs")
 
     # # classify and plot test data
-    # retrainedSWlabels = iSWcnn.classify_data(trainingSWdata, 1)
+    retrainedSWlabels = iSWcnn.classify_data(trainingSWdata, 1)
 
-    # retrainedSWimages = plot_swImage_grid(trainingSWdata, retrainedSWlabels, linePlot=True, iTitle="Retrained data SWs")   
-    # retrainedNonSWimages = plot_swImage_grid(trainingSWdata, invert_ones_zeros(retrainedSWlabels), linePlot=True, iTitle="Retrained data nonSWs")    
+    retrainedSWimages = plot_swImage_grid(trainingSWdata, retrainedSWlabels, linePlot=False, iTitle="Retrained data SWs")   
+    retrainedNonSWimages = plot_swImage_grid(trainingSWdata, invert_ones_zeros(retrainedSWlabels), linePlot=False, iTitle="Retrained data nonSWs")    
 
 
     # # classify and plot test data
@@ -92,9 +92,9 @@ if __name__ == '__main__':
     # testSWimages = plot_swImage_grid(testSWdata, testSWlabels, linePlot=True, iTitle="Test data SWs")   
     # testNonSWimages = plot_swImage_grid(testSWdata, invert_ones_zeros(testSWlabels), linePlot=True, iTitle="Test data nonSWs")    
 
-    dataImagesToPlot = np.vstack([trainSWimages, trainNonSWimages])
+    # dataImagesToPlot = np.vstack([trainSWimages, trainNonSWimages])
 
-    # dataImagesToPlot = np.vstack([trainSWimages, retrainedSWimages, trainNonSWimages, retrainedNonSWimages])
+    dataImagesToPlot = np.vstack([trainSWimages, retrainedSWimages, trainNonSWimages, retrainedNonSWimages])
     #testSWimages, testNonSWimages])
 
     print("dataImagesToPlot.shape: ", dataImagesToPlot.shape)

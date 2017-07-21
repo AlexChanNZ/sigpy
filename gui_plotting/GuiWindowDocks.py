@@ -205,18 +205,16 @@ class GuiWindowDocks:
         self.w1.setXRange(0, 3000)    
 
 
-
         for i in range(nPlots):
-            c1 = pg.PlotCurveItem(pen=(i, nPlots*1.3))
-            c1.setPos(0, i * 1.2)
+            c1 = pg.PlotCurveItem(pen=(i, nPlots))
+            c1.setPos(0, i)
             self.curves_left.append(c1)
             self.w1.addItem(c1)
 
-            c2 = pg.PlotCurveItem(pen=(i, nPlots*1.3))
-            c2.setPos(0, i * 1.2)
+            c2 = pg.PlotCurveItem(pen=(i, nPlots))
+            c2.setPos(0, i)
             self.curves_right.append(c2)
             self.w2.addItem(c2)
-
 
 
         self.s1 = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 255, 255, 120))
@@ -259,16 +257,16 @@ class GuiWindowDocks:
         self.w1.setXRange(0, 3000)    
             
         for i in range(nPlots):
-            c1 = pg.PlotCurveItem(pen=(i, nPlots*1.3))
+            c1 = pg.PlotCurveItem(pen=(i, nPlots))
             self.w1.addItem(c1)
-            c1.setPos(0, i * 1.2)
+            c1.setPos(0, i)
             self.curves_left.append(c1)
 
             self.w1.resize(600, 10)
 
-            c2 = pg.PlotCurveItem(pen=(i, nPlots*1.3))
+            c2 = pg.PlotCurveItem(pen=(i, nPlots))
             self.w2.addItem(c2)
-            c2.setPos(0, i * 1.2)
+            c2.setPos(0, i)
             self.curves_right.append(c2)
             self.w2.showGrid(x=True, y=True)
             self.w2.resize(600, 10)
@@ -413,8 +411,8 @@ class GuiWindowDocks:
             pos.append([int(val/length), int(val % length)])
         pos_np = np.asarray(pos).transpose()
 
-        self.s1.addPoints(x=pos_np[1], y=(pos_np[0] * 1.2))
-        self.s2.addPoints(x=pos_np[1], y=(pos_np[0] * 1.2))
+        self.s1.addPoints(x=pos_np[1], y=(pos_np[0]))
+        self.s2.addPoints(x=pos_np[1], y=(pos_np[0]))
 
 
 
@@ -449,7 +447,7 @@ class GuiWindowDocks:
         testData = np.reshape(self.data, -1)
 
         windowSize = 36
-        overlap = 0.5
+        overlap = 0.1
         samples = []
         for j in range(0,len(testData), int(overlap * windowSize)):
             if (len(testData[j:j+windowSize]) == windowSize):
@@ -467,28 +465,49 @@ class GuiWindowDocks:
 
         swCNN = SlowWaveCNN(self.trainingDataPlot.plotDat[0:self.trainingDataPlot.plotLength, :], self.trainingDataPlot.plotEvent[0:self.trainingDataPlot.plotLength, :])
         preds = swCNN.classify_data(sample_np, cnnType)
-        
 
-        # Plot the prediction outputs here.
+        
+        # Plot the prediction outputs 
         prediction = np.zeros((1, len(testData)));
 
-        count = 0;
-        locs = np.where(preds==1)[0]
-        win_range = 0;        
+        count = 0
+        swLocs = np.where(preds==1)[0]
+        print("Number sw raw predictions: ", len(swLocs))
+        print("Number of preds: ", len(preds))
+
+        win_range = 0
 
         for j in range(0,len(testData), int(overlap * windowSize)):
-            if (len(testData[j:j+windowSize]) == windowSize):
+
+            if (len(testData[j : j+windowSize]) == windowSize):
                 count = count + 1;
-                if (len(np.where(locs == count)[0]) > 0 and (j+windowSize > win_range)):
-                    prediction[0,j+windowSize] = 1
-                    win_range = j + 3*windowSize;
-        
+
+                if (len(np.where(swLocs == count)[0]) > 0 and (j+windowSize > win_range)) :
+
+                    # prediction[0, j+windowSize] = 1
+                    # win_range = j + 3*windowSize;
+
+                    prediction[0, j] = 1
+                    win_range = j + 3 * windowSize;
+
+                    print(j," ",win_range)
+
+        print("Predictions to X locations: ", len(np.where(prediction==1)[1]))
+
         linear_at_uncorrected = np.array(np.where(prediction == 1))
+        # linear_at_uncorrected = np.array(np.where(preds == 1))
+
         rows, cols = linear_at_uncorrected.shape
         to_remove_index = []
+
+        # Remove duplicated values ?
         for i in range(cols - 1):
-            if linear_at_uncorrected[0][i + 1] - linear_at_uncorrected[0][i] < 60:
+            if linear_at_uncorrected[0][i + 1] - linear_at_uncorrected[0][i] < 60 :
                 to_remove_index.append(i + 1)
+
+        # to_remove_index = []
+
+
         linear_at = np.delete(linear_at_uncorrected, to_remove_index)
 
         pos = []
@@ -499,6 +518,7 @@ class GuiWindowDocks:
         # Check for sync events
         for val in linear_at.transpose():
             sync_events.append(int(val % lengthData))
+
         remove_sync_point = set([x for x in sync_events if sync_events.count(x) > 600])
 
         
@@ -506,10 +526,11 @@ class GuiWindowDocks:
 
         # Remove the sync events from the actual array
 
-        for val in linear_at.transpose():
-            if int(val % lengthData) not in remove_sync_point:
-                xIndex = int(val / lengthData)
-                yChannel = int(val % lengthData)
+        # for val in linear_at.transpose():
+        for swPred in linear_at.transpose():
+            if int(swPred % lengthData) not in remove_sync_point:
+                xIndex = int(swPred / lengthData)
+                yChannel = int(swPred % lengthData)
                 pos.append([xIndex, yChannel])
 
         pos_np = np.asarray(pos).transpose()
@@ -521,8 +542,8 @@ class GuiWindowDocks:
             print("No events detected")
             return
 
-        self.s1.addPoints(x=pos_np[1], y=(pos_np[0] * 1.2))
-        self.s2.addPoints(x=pos_np[1], y=(pos_np[0] * 1.2))
+        self.s1.addPoints(x=pos_np[1], y=(pos_np[0]))
+        self.s2.addPoints(x=pos_np[1], y=(pos_np[0]))
 
 
         # Convert event co-ordinates to indices for  2d TOA to output to GEMS

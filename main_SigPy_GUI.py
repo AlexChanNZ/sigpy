@@ -26,6 +26,7 @@ from gui_plotting.mpl_plots  import *
 from gui_plotting.GuiWindowDocks import GuiWindowDocks
 
 import numpy as np
+np.set_printoptions(linewidth=1000, precision=3, threshold=np.inf)
 
 
 
