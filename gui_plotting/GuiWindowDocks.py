@@ -484,8 +484,7 @@ class GuiWindowDocks:
         winRange = 0
         winRangeMultiplier = 2 * windowSize
 
-        # for every x sec segment of data. if there are multiple predictions within this segment, mark as sw.
-        start = time.time()
+        # for every x sec segment of data. if there are SW predictions within this segment, mark as sw.
 
         for j in range(0,len(testData), int(overlap * windowSize)):
 
@@ -496,25 +495,6 @@ class GuiWindowDocks:
                 prediction[j+maxIndex] = 1
                 winRange = j + winRangeMultiplier #skip next 2 windows
 
-        end = time.time()
-        print(end - start)
-        quit()
-
-        # prediction[swLocs] = 1
-
-
-        # pointsPerWin = int(overlap * windowSize)
-        # midPoint = int(pointsPerWin / 2)
-
-        # for j in range(0,len(testData), pointsPerWin) :
-
-        #     if len(np.where(prediction[j: j+pointsPerWin] == 1)[0]) > 1 :
-        #         prediction[j: j+pointsPerWin] = 0
-        #         prediction[j + midPoint] = 1
-        #     else:
-        #         prediction[j: j+pointsPerWin] = 0
-
-        # print("Prediction: ", prediction[0:1000])
 
         print("prediction.shape: ", prediction.shape)
 
