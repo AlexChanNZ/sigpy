@@ -13,8 +13,8 @@ from sklearn.preprocessing import scale # for normalisation between 0 and 1
 
 
 def norm_first_clip(inData, minVal, maxVal) :
+
 	outData = np.clip(inData, minVal, maxVal)
-	print("First clip: ",outData[0,200:240])
 	print("outData.shape: ", outData.shape)
 
 	return outData
@@ -22,8 +22,8 @@ def norm_first_clip(inData, minVal, maxVal) :
 
 
 def norm_second_clip(secData) : #Shameer's secret sauce
+
 	massagedData = (secData - secData.mean(axis=0)) * (4*(secData.std(axis=0)))
-	print("massagedData: ", massagedData[200:240])
 	print("massagedData.shape: ", massagedData.shape)
 
 	return massagedData
@@ -31,7 +31,7 @@ def norm_second_clip(secData) : #Shameer's secret sauce
 
 
 def normalise_chan_data(chanData) :
-	# Clip between -2, 2 mv and Shameers normalisation
+	# Clip between -2, 2 mv and perform Shameers normalisation
 	clippedData = norm_second_clip(norm_first_clip(chanData,-2000, 2000))
 
 	# Classic normalisation [0,1]

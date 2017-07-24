@@ -7,6 +7,9 @@
 import sys
 import numpy as np
 import platform
+import time
+
+
 
 from multiprocessing import Process
 # Main GUI support
@@ -468,31 +471,54 @@ class GuiWindowDocks:
 
         
         # Plot the prediction outputs 
-        prediction = np.zeros((1, len(testData)));
+        prediction = np.zeros((len(testData)), dtype=int);
 
         count = 0
         swLocs = np.where(preds==1)[0]
+
         print("Number sw raw predictions: ", len(swLocs))
         print("Number of preds: ", len(preds))
+        print("Testdata.shape ", testData.shape)
 
-        win_range = 0
+
+        winRange = 0
+        winRangeMultiplier = 2 * windowSize
+
+        # for every x sec segment of data. if there are multiple predictions within this segment, mark as sw.
+        start = time.time()
 
         for j in range(0,len(testData), int(overlap * windowSize)):
 
-            if (len(testData[j : j+windowSize]) == windowSize):
-                count = count + 1;
+            count += 1
 
-                if (len(np.where(swLocs == count)[0]) > 0 and (j+windowSize > win_range)) :
+            if (len(np.where(swLocs == count)[0]) > 0 and (j > winRange)) :
+                maxIndex = np.argmax(testData[j : j+windowSize])
+                prediction[j+maxIndex] = 1
+                winRange = j + winRangeMultiplier #skip next 2 windows
 
-                    # prediction[0, j+windowSize] = 1
-                    # win_range = j + 3*windowSize;
+        end = time.time()
+        print(end - start)
+        quit()
 
-                    prediction[0, j] = 1
-                    win_range = j + 3 * windowSize;
+        # prediction[swLocs] = 1
 
-                    print(j," ",win_range)
 
-        print("Predictions to X locations: ", len(np.where(prediction==1)[1]))
+        # pointsPerWin = int(overlap * windowSize)
+        # midPoint = int(pointsPerWin / 2)
+
+        # for j in range(0,len(testData), pointsPerWin) :
+
+        #     if len(np.where(prediction[j: j+pointsPerWin] == 1)[0]) > 1 :
+        #         prediction[j: j+pointsPerWin] = 0
+        #         prediction[j + midPoint] = 1
+        #     else:
+        #         prediction[j: j+pointsPerWin] = 0
+
+        # print("Prediction: ", prediction[0:1000])
+
+        print("prediction.shape: ", prediction.shape)
+
+        print("nSW Predictions to X locations: ", len(np.where(prediction==1)[0]))
 
         linear_at_uncorrected = np.array(np.where(prediction == 1))
         # linear_at_uncorrected = np.array(np.where(preds == 1))
@@ -505,8 +531,8 @@ class GuiWindowDocks:
             if linear_at_uncorrected[0][i + 1] - linear_at_uncorrected[0][i] < 60 :
                 to_remove_index.append(i + 1)
 
-        # to_remove_index = []
-
+        # Clear duplicated values to stop their removal
+        to_remove_index = []
 
         linear_at = np.delete(linear_at_uncorrected, to_remove_index)
 
@@ -521,8 +547,8 @@ class GuiWindowDocks:
 
         remove_sync_point = set([x for x in sync_events if sync_events.count(x) > 600])
 
-        
-        #remove_sync_point.clear()
+        # Clear sync points that are marked for removal:
+        remove_sync_point.clear()
 
         # Remove the sync events from the actual array
 
@@ -538,13 +564,13 @@ class GuiWindowDocks:
         print("self.data.shape: ", self.data.shape)
         print("pos_np[1].size: ", pos_np[1].size)
 
+
         if pos_np.size is 0:
             print("No events detected")
             return
 
         self.s1.addPoints(x=pos_np[1], y=(pos_np[0]))
         self.s2.addPoints(x=pos_np[1], y=(pos_np[0]))
-
 
         # Convert event co-ordinates to indices for  2d TOA to output to GEMS
         self.statBar.showMessage("Finished classifying slow wave events.", 1000)
