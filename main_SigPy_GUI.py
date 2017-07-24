@@ -53,8 +53,8 @@ Intestine data
 # print(mat_contents)
 
 load_GEMS_mat_into_SigPy(dataFileAndRoot)
-if not cg.dataForAnalysis['SigPy'].get('normData') :
-    cg.dataForAnalysis['SigPy']['normData'] = preprocess(cg.dataForAnalysis['SigPy']['filtData'])
+if not cg.dat['SigPy'].get('normData') :
+    cg.dat['SigPy']['normData'] = preprocess(cg.dat['SigPy']['filtData'])
 
 
 cg.set_data_file_name((dataFileAndRoot.rsplit('/', 1)[1]))

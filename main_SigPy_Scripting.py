@@ -15,10 +15,7 @@ matplotlib.use("TKAgg")
 
 from utils.np_utils import *
 
-
 from matplotlib import pyplot as plt
-
-
 
 # Internal dependencies
 import config_global as cg
@@ -55,8 +52,8 @@ Intestine data
 
 
 load_GEMS_mat_into_SigPy(dataFileAndRoot)
-if not cg.dataForAnalysis['SigPy'].get('normData') :
-    cg.dataForAnalysis['SigPy']['normData'] = preprocess(cg.dataForAnalysis['SigPy']['filtData'])
+if not cg.dat['SigPy'].get('normData') :
+    cg.dat['SigPy']['normData'] = preprocess(cg.dat['SigPy']['filtData'])
 
 
 cg.set_data_file_name((dataFileAndRoot.rsplit('/', 1)[1]))
@@ -70,7 +67,7 @@ if __name__ == '__main__':
     # OR
     iSWcnn = SlowWaveCNN()
 
-    testSWdata = cg.dataForAnalysis['SigPy']['normData'].reshape((-1, 1, 6, 6))
+    testSWdata = cg.dat['SigPy']['normData'].reshape((-1, 1, 6, 6))
 
 
     # load and plot training data
@@ -87,7 +84,7 @@ if __name__ == '__main__':
 
 
     # # classify and plot test data
-    # testSWlabels = iSWcnn.classify_data(cg.dataForAnalysis['SigPy']['normData'], 1)
+    # testSWlabels = iSWcnn.classify_data(cg.dat['SigPy']['normData'], 1)
 
     # testSWimages = plot_swImage_grid(testSWdata, testSWlabels, linePlot=True, iTitle="Test data SWs")   
     # testNonSWimages = plot_swImage_grid(testSWdata, invert_ones_zeros(testSWlabels), linePlot=True, iTitle="Test data nonSWs")    

@@ -20,34 +20,35 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath):
     :return: predictions for the entire data set
     """
 
-    cg.dataForAnalysis = sio.loadmat(fileNameAndPath, matlab_compatible=True) #added matlab_compatible=True to aid GEMS compatibility
+    cg.dat = sio.loadmat(fileNameAndPath, matlab_compatible=True) #added matlab_compatible=True to aid GEMS compatibility
 
     # Check if this file has been saved from SigPy and whether it has been copied
-    if hasattr(cg.dataForAnalysis, 'GEMSorig_toapp'):
+    if hasattr(cg.dat, 'GEMSorig_toapp'):
 
         print("This file has been saved from SigPy")        
         print("This GEMS file, already has its original GEMs data duplicated.")
 
     else:
         #Duplicate original gems file and create SigPy structure
-        cg.dataForAnalysis['GEMSorig_toapp'] = cg.dataForAnalysis['toapp'][0,0]
+        cg.dat['GEMSorig_toapp'] = cg.dat['toapp'][0,0]
 
-    cg.dataForAnalysis['SigPy'] = {}
-    cg.dataForAnalysis['SigPy']['filtData'] = cg.dataForAnalysis['toapp']['filtdata'][0,0]
-    cg.dataForAnalysis['SigPy']['sampleRate'] = cg.dataForAnalysis['toapp']['fs'][0,0]
-    cg.dataForAnalysis['SigPy']['timeStart'] = cg.dataForAnalysis['toapp']['filstartT'][0,0]
-    cg.dataForAnalysis['SigPy']['timeEnd'] = cg.dataForAnalysis['toapp']['Teof'][0,0]
-    cg.dataForAnalysis['SigPy']['timeBetweenSamples'] = 1 / cg.dataForAnalysis['SigPy']['sampleRate'][0,0]
+    cg.dat['SigPy'] = {}
+    cg.dat['SigPy']['filtData'] = cg.dat['toapp']['filtdata'][0,0]
+    cg.dat['SigPy']['sampleRate'] = cg.dat['toapp']['fs'][0,0]
+    cg.dat['SigPy']['timeStart'] = cg.dat['toapp']['filstartT'][0,0]
+    cg.dat['SigPy']['timeEnd'] = cg.dat['toapp']['Teof'][0,0]
+    cg.dat['SigPy']['timeBetweenSamples'] = 1 / cg.dat['SigPy']['sampleRate'][0,0]
 
-    cg.dataForAnalysis['toapp']['showchans'][0,0] = np.array(cg.dataForAnalysis['toapp']['showchans'][0,0]).astype(dtype=float)
-    cg.dataForAnalysis['toapp']['orientedElec'][0,0] = np.array(cg.dataForAnalysis['toapp']['orientedElec'][0,0]).astype(dtype=float)
+    cg.dat['toapp']['showchans'][0,0] = np.array(cg.dat['toapp']['showchans'][0,0]).astype(dtype=float)
+    cg.dat['toapp']['orientedElec'][0,0] = np.array(cg.dat['toapp']['orientedElec'][0,0]).astype(dtype=float)
 
+    cg.dat['SigPy']['gridMap'] = cg.dat['toapp']['orientedElec'][0,0]
 
-    # cg.dataForAnalysis = sio.loadmat(fileNameAndPath, mat_dtype=False) 
+    # cg.dat = sio.loadmat(fileNameAndPath, mat_dtype=False) 
 
-    # print('cg.dataForAnalysis[toapp][orientedElec]:', cg.dataForAnalysis['toapp']['orientedElec'][0,0]
+    # print('cg.dat[toapp][orientedElec]:', cg.dat['toapp']['orientedElec'][0,0]
 
-    # cg.dataForAnalysis['SigPy']['eData'] = cg.dataForAnalysis['toapp']['edata'][0,0]
+    # cg.dat['SigPy']['eData'] = cg.dat['toapp']['edata'][0,0]
 
     # print("cg.sigData['eData'].shape: ", cg.sigData['eData'].shape)
 
@@ -55,14 +56,14 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath):
 def save_GEMS_SigPy_file(fileNameAndPath):
 
     # To overwrite original GEMS data, comment this out to save GEMS data as backup.
-    # cg.dataForAnalysis.pop('SigPy', None)
-    cg.dataForAnalysis.pop('GEMSorig_toapp', None)
-    cg.dataForAnalysis.pop('GEMSorig_bdfdef', None)
-    # cg.dataForAnalysis.pop('bdfdef', None) #popping bdfdef because of UI control compatibility. 
+    # cg.dat.pop('SigPy', None)
+    cg.dat.pop('GEMSorig_toapp', None)
+    cg.dat.pop('GEMSorig_bdfdef', None)
+    # cg.dat.pop('bdfdef', None) #popping bdfdef because of UI control compatibility. 
     #EDIT: Appears saving UIControl component as struct still works in GEMS.
 
     # Save GEMS file
-    sio.savemat(fileNameAndPath, cg.dataForAnalysis)
+    sio.savemat(fileNameAndPath, cg.dat)
 
 
 def update_GEMS_data_with_TOAs(pos_np, nChans) :
@@ -109,7 +110,7 @@ def update_GEMS_data_with_TOAs(pos_np, nChans) :
         if (sampleIndex > 0) :
 
             toaChanIndices.append(sampleIndex)
-            timestamp = cg.dataForAnalysis['SigPy']['timeBetweenSamples'] * sampleIndex + cg.dataForAnalysis['SigPy']['timeStart']
+            timestamp = cg.dat['SigPy']['timeBetweenSamples'] * sampleIndex + cg.dat['SigPy']['timeStart']
             toaChanTimeStamps.append(round(timestamp[0][0],4))       
             
         lastSampleChan = sampleChan
@@ -119,11 +120,11 @@ def update_GEMS_data_with_TOAs(pos_np, nChans) :
     print("toaIndx: ", toaIndx)        
     print("toaCell: ", toaCell)  
 
-    cg.dataForAnalysis['SigPy']['toaIndx'] = toaIndx
-    cg.dataForAnalysis['SigPy']['toaCell'] = toaCell
+    cg.dat['SigPy']['toaIndx'] = toaIndx
+    cg.dat['SigPy']['toaCell'] = toaCell
 
-    cg.dataForAnalysis['toapp']['toaIndx'][0,0] = toaIndx
-    cg.dataForAnalysis['toapp']['toaCell'][0,0] = toaCell
+    cg.dat['toapp']['toaIndx'][0,0] = toaIndx
+    cg.dat['toapp']['toaCell'][0,0] = toaCell
 
 
  

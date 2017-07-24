@@ -42,6 +42,8 @@ from ml_classes.SlowWaveCNN import SlowWaveCNN
 import config_global as cg
 from file_io.gems_sigpy import *
 from signal_processing.preprocessing import preprocess
+from signal_processing.mapping import map_channel_data_to_grid
+
 
 # For debugging purps
 
@@ -80,7 +82,7 @@ class GuiWindowDocks:
         self.elec = []
         self.data = []
 
-        self.set_plot_data(cg.dataForAnalysis['SigPy']['normData'], cg.dataForAnalysis['SigPy']['normData'].shape[0], cg.dataForAnalysis['SigPy']['normData'].shape[1])
+        self.set_plot_data(cg.dat['SigPy']['normData'], cg.dat['SigPy']['normData'].shape[0], cg.dat['SigPy']['normData'].shape[1])
 
         self.trainingDataPlot = TrainingDataPlot()
         
@@ -89,6 +91,7 @@ class GuiWindowDocks:
         self.undoBtn.clicked.connect(lambda: self.undo())
         self.writeWEKABtn.clicked.connect(lambda: self.writeWEKA_data())
         self.readPredictedVal.clicked.connect(lambda: self.read_predicted())
+        self.amplitudeMapping.clicked.connect(lambda: self.plot_amplitude_map())        
         self.analyseInternal.clicked.connect(lambda: self.analyse_internal())
         self.save_trained_data.clicked.connect(lambda: self.save_trained())
         self.load_trained_data.clicked.connect(lambda: self.load_trained())
@@ -155,6 +158,8 @@ class GuiWindowDocks:
         self.writeWEKABtn = QtGui.QPushButton('Write WEKA')
         self.readPredictedVal = QtGui.QPushButton('Read Weka CSV')
         self.analyseInternal = QtGui.QPushButton('Analyse Events')
+        self.amplitudeMapping = QtGui.QPushButton('Map Amplitude')
+
         self.save_trained_data = QtGui.QPushButton('Save Training')
         self.load_trained_data = QtGui.QPushButton('Load Training')
 
@@ -183,6 +188,8 @@ class GuiWindowDocks:
         w1.addWidget(self.writeWEKABtn, row=self.add_one(), col=0)
         w1.addWidget(self.readPredictedVal, row=self.add_one(),col=0)
         w1.addWidget(self.analyseInternal, row=self.add_one(), col=0)
+        w1.addWidget(self.amplitudeMapping, row=self.add_one(), col=0)
+
         w1.addWidget(self.save_trained_data, row=self.add_one(), col=0)
         w1.addWidget(self.load_trained_data, row=self.add_one(), col=0)
         w1.addWidget(self.btnIsNormal,row=self.add_one(),col=0)
@@ -299,7 +306,7 @@ class GuiWindowDocks:
         tickRange = range(0, data.shape[1], tickInterval)
 
         # Convert indices to time for ticks -- multiply indices by time between samples and add original starting time.
-        tickLabels = [str(round(i*cg.dataForAnalysis['SigPy']['timeBetweenSamples']+cg.dataForAnalysis['SigPy']['timeStart'],2)) for i in tickRange]
+        tickLabels = [str(round(i*cg.dat['SigPy']['timeBetweenSamples']+cg.dat['SigPy']['timeStart'],2)) for i in tickRange]
 
         print(tickLabels)
 
@@ -346,6 +353,7 @@ class GuiWindowDocks:
         self.undoBtn.clicked.connect(lambda: self.undo())
         self.writeWEKABtn.clicked.connect(lambda: self.writeWEKA_data())
         self.readPredictedVal.clicked.connect(lambda: self.read_predicted())
+        self.amplitudeMapping.clicked.connect(lambda: self.plot_amplitude_map())
         self.analyseInternal.clicked.connect(lambda: self.analyse_internal())
         self.save_trained_data.clicked.connect(lambda: self.save_trained())
         self.load_trained_data.clicked.connect(lambda: self.load_trained())
@@ -439,6 +447,18 @@ class GuiWindowDocks:
         weka_write = WekaInterface(training_features, output_name)
         weka_write.arff_write(event)
 
+
+    def plot_amplitude_map(self):
+        self.ampMap = pg.ImageView()
+        self.ampMap.show()
+
+        # vb = win.addViewBox()
+ 
+        # vb.addItem(gridData)
+     
+        cg.dat['SigPy']['gridData'] = map_channel_data_to_grid()
+
+        self.ampMap.setImage(cg.dat['SigPy']['gridData'])
 
 
     def analyse_internal(self):
@@ -582,27 +602,27 @@ class GuiWindowDocks:
 
     def load_file_selector__gui_set_data(self):
         # filenames = QtGui.QFileDialog.getOpenFileNames(self.loadAction, "Select File", "", "*.txt")
-        cg.dataForAnalysisFileName = QtGui.QFileDialog.getOpenFileName(None, "Select File", "", "*.mat")
+        cg.datFileName = QtGui.QFileDialog.getOpenFileName(None, "Select File", "", "*.mat")
 
         if not (sys.platform == "linux2") :
-            cg.dataForAnalysisFileName = cg.dataForAnalysisFileName[0]
+            cg.datFileName = cg.datFileName[0]
 
         self.statBar.showMessage("Loading . . . ", 1000)
-        print("cg.dataForAnalysisFileName: ", cg.dataForAnalysisFileName)        
-        load_GEMS_mat_into_SigPy(cg.dataForAnalysisFileName)
+        print("cg.datFileName: ", cg.datFileName)        
+        load_GEMS_mat_into_SigPy(cg.datFileName)
 
         self.statBar.showMessage("Finished loading! Now preprocessing . . .")
 
-        cg.dataForAnalysis['SigPy']['normData'] = preprocess(cg.dataForAnalysis['SigPy']['filtData'])
+        cg.dat['SigPy']['normData'] = preprocess(cg.dat['SigPy']['filtData'])
         self.statBar.showMessage("Finished pre-processing! Now repainting plots . . . ")
 
-        # print("cg.dataForAnalysis['SigPy']['normData']: ", cg.dataForAnalysis['SigPy']['normData'])
+        # print("cg.dat['SigPy']['normData']: ", cg.dat['SigPy']['normData'])
         # self.trainingDataPlot = TrainingDataPlot()
 
 
         self.repaint_plots()
         # Set plot data
-        self.set_plot_data(cg.dataForAnalysis['SigPy']['normData'], cg.dataForAnalysis['SigPy']['normData'].shape[0], cg.dataForAnalysis['SigPy']['normData'].shape[1])
+        self.set_plot_data(cg.dat['SigPy']['normData'], cg.dat['SigPy']['normData'].shape[0], cg.dat['SigPy']['normData'].shape[1])
         self.btnIsNormal.setChecked(1)
 
         self.statBar.showMessage("Finished repainting plots!", 2000)
@@ -610,14 +630,14 @@ class GuiWindowDocks:
 
     def save_as_file_selector(self):
 
-        cg.dataForAnalysisFileName = QtGui.QFileDialog.getSaveFileName(None, "Save As File", cg.dataForAnalysisFileName, "*.mat")
+        cg.datFileName = QtGui.QFileDialog.getSaveFileName(None, "Save As File", cg.datFileName, "*.mat")
 
         if not (sys.platform == "linux2") :
-            cg.dataForAnalysisFileName = cg.dataForAnalysisFileName[0]        
+            cg.datFileName = cg.datFileName[0]        
         self.statBar.showMessage("Saving . . . ")
-        print("cg.dataForAnalysisFileName: ", cg.dataForAnalysisFileName) 
+        print("cg.datFileName: ", cg.datFileName) 
 
-        save_GEMS_SigPy_file(cg.dataForAnalysisFileName)
+        save_GEMS_SigPy_file(cg.datFileName)
 
         self.statBar.showMessage("Saved file!")
       
@@ -625,7 +645,7 @@ class GuiWindowDocks:
 
     def save_file_selector(self):
         self.statBar.showMessage("Saving . . . ")
-        save_GEMS_SigPy_file(cg.dataForAnalysisFileName)
+        save_GEMS_SigPy_file(cg.datFileName)
 
         self.statBar.showMessage("Saved file!")
 
