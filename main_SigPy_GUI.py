@@ -18,7 +18,7 @@ from matplotlib import pyplot as plt
 
 
 # Internal dependencies
-import config_global as cg
+import config_global as cg 
 from file_io.gems_sigpy import load_GEMS_mat_into_SigPy
 from signal_processing.preprocessing import preprocess
 from ml_classes.SlowWaveCNN import SlowWaveCNN

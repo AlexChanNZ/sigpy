@@ -5,6 +5,7 @@
     Description: Provide Gui Interface.
 """
 import sys
+import os
 import numpy as np
 import platform
 import time
@@ -14,7 +15,7 @@ import time
 from multiprocessing import Process
 # Main GUI support
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.dockarea import *
 # import cPickle as pickle # Python3 
 import pickle
@@ -48,6 +49,7 @@ from signal_processing.mapping import map_channel_data_to_grid
 # For debugging purps
 
 class GuiWindowDocks:
+
     def __init__(self):
         """
         Initialise the properties of the GUI. This part of the code sets the docks, sizes
@@ -108,6 +110,7 @@ class GuiWindowDocks:
 
 
     def add_menu_bar(self):
+
         ## MENU BAR
         self.statBar = self.win.statusBar()
 
@@ -150,6 +153,7 @@ class GuiWindowDocks:
 
 
     def add_dock_widgets_controls(self):
+
         w1 = pg.LayoutWidget()
         label = QtGui.QLabel('Usage info')
         self.saveBtn_events = QtGui.QPushButton('Save As Events')
@@ -321,6 +325,7 @@ class GuiWindowDocks:
 
 
     def updatePlot(self):
+
         xpos = self.rect.pos()[0]
         ypos = self.rect.pos()[1]
         width = self.rect.size()[0]
@@ -331,6 +336,7 @@ class GuiWindowDocks:
 
 
     def updateRegion(self):
+
         xpos = self.w2.getViewBox().viewRange()[0][0]
         ypos = self.w2.getViewBox().viewRange()[1][0]
         self.rect.setPos([xpos, ypos], update=False)
@@ -338,6 +344,7 @@ class GuiWindowDocks:
 
 
     def repaint_plots(self):
+
         self.curves_left = []
         self.curves_right = []
         self.curve_bottom = []
@@ -448,17 +455,179 @@ class GuiWindowDocks:
         weka_write.arff_write(event)
 
 
+
+    def btn_animation_set_play(self):
+        print("Setting play button")
+
+        # self.btnPlayPause.setText("")
+        btnPlayIconPath = cg.graphicsPath + "btnPlayTiny.png"
+      
+        if os.path.exists(btnPlayIconPath):
+
+            self.btnPlayPause.setIcon(QtGui.QIcon(btnPlayIconPath))
+            self.btnPlayPause.setIconSize(QtCore.QSize(14,14))
+            try:
+                self.btnPlayPause.clicked.disconnect()
+            except Exception, e:
+                print(e)
+
+            self.btnPlayPause.clicked.connect(self.play_animation)            
+
+        else:
+            print("Cannot find icon file! ")
+
+
+    def btn_animation_set_pause(self):
+        print("Setting pause button")
+
+        self.btnPlayPause.setFixedHeight(14)
+        self.btnPlayPause.setFixedWidth(14)
+
+
+        # self.btnPlayPause.setText("Pause Animation")
+
+        btnPauseIconPath = cg.graphicsPath + "btnPauseTiny.png"
+
+        if os.path.exists(btnPauseIconPath):
+
+            self.btnPlayPause.setIcon(QtGui.QIcon(btnPauseIconPath))
+            self.btnPlayPause.setIconSize(QtCore.QSize(14,14))
+
+            try:
+                self.btnPlayPause.clicked.disconnect()
+            except Exception, e:
+                print(e)
+
+            self.btnPlayPause.clicked.connect(self.pause_animation)
+
+
+
+    def play_animation(self):
+        # self.ampMap.Playing = True
+        # self.ampMap.frameRate = self.resumeFPS
+    
+
+        self.ampMap.play(self.ampMap.frameRate)
+        self.btn_animation_set_pause()
+
+
+
+    def pause_animation(self):
+        self.ampMap.Playing = False
+
+        # self.resumeFPS = self.ampMap.frameRate
+        # self.ampMap.frameRate = 0
+        # self.speedSlider.setValue(self.ampMap.frameRate)
+        self.ampMap.play(0)
+        self.btn_animation_set_play()
+
+
+    def change_frameRate(self, intVal):
+        self.ampMap.frameRate = intVal
+        self.fpsLabel.setText(str(int(intVal/30)))
+
+        self.ampMap.play(self.ampMap.frameRate)
+
+        # if (self.ampMap.frameRate==0) :
+        #     self.pause_animation()
+
+
+
     def plot_amplitude_map(self):
-        self.ampMap = pg.ImageView()
-        self.ampMap.show()
+
+        # amplitudeMapWidget = pg.GraphicsLayoutWidget()
+        # vb = amplitudeMapWidget.addViewBox(row=2, col=1)
+
+        # self.playbackTimer = QTimer()
+        # self.playbackTimer.timeout.connect(self.increment_playback_time)
+        # self.playbackTimeChanged.connect(self.update_gui)
+
+        self.ampMap = pg.ImageView(name="Mapped Animation")
+        cg.dat['SigPy']['gridData'] = map_channel_data_to_grid()
+
+        self.ampMap.setImage(cg.dat['SigPy']['gridData'])
+
+        self.ampMap.show()        
+
+        self.ampMap.frameRate = 60       
+        self.resumeFPS = self.ampMap.frameRate
+
+        self.btnPlayPause = QtGui.QPushButton('')
+        self.btn_animation_set_pause()
+
+        self.speedSlider = QtGui.QSlider()
+        self.speedSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.speedSlider.setMinimum(1)        
+        self.speedSlider.setMaximum(270)
+        self.speedSlider.setValue(self.ampMap.frameRate)
+
+
+        self.speedSlider.setSingleStep(30)
+        
+        self.speedSlider.valueChanged.connect(self.change_frameRate)
+
+        self.fpsLabel = QtGui.QLabel(str(int(self.ampMap.frameRate/30)))
+
+        self.LayoutWidgetPlayPauseSpeed = QtGui.QWidget()
+        self.qGridLayout = QtGui.QGridLayout()
+
+        # self.qGridLayout.addLayout(self.qGridLayout, 1, 2, 1, 1)
+
+        self.qGridLayout.setHorizontalSpacing(8)
+        self.qGridLayout.setVerticalSpacing(0)
+
+        self.qGridLayout.setContentsMargins(0,0,0,0)
+
+        self.LayoutWidgetPlayPauseSpeed.setLayout(self.qGridLayout)
+        
+        # self.LayoutWidgetPlayPauseSpeed.setLayout(self.layout)
+
+        self.qGridLayout.addWidget(self.btnPlayPause, 0,0, alignment=1)
+        self.qGridLayout.addWidget(self.speedSlider, 0,1, alignment=1)
+        self.qGridLayout.addWidget(self.fpsLabel, 0,2, alignment=0)
+
+        # self.layout.addWidget(self.btnPlayPause, 0,0,0,0)
+
+        self.proxyWidget = QtGui.QGraphicsProxyWidget()
+        self.proxyWidget.setWidget(self.LayoutWidgetPlayPauseSpeed)
+        self.proxyWidget.setPos(0, 0)        
+
+
+        # newWin = pg.GraphicsWindow()
+        # p3 = newWin.addLayout(row=2, col=4)
+
+        # p3.addItem(self.btnPlayPauseWidget,row=2,col=4)               
 
         # vb = win.addViewBox()
  
         # vb.addItem(gridData)
      
-        cg.dat['SigPy']['gridData'] = map_channel_data_to_grid()
 
-        self.ampMap.setImage(cg.dat['SigPy']['gridData'])
+        # print("")
+        # print("Histogram Widget: ", self.ampMap.getHistogramWidget().childItems())
+        # print("")
+        # print("ImageItem: ",self.ampMap.getImageItem())
+        # print("")
+        print("ViewBox: ",self.ampMap.getView())
+        try:
+            self.ampMap.getView().vb.setTitle = "Map animation"
+        except Exception, e:
+            print(e) 
+        try:
+            self.ampMap.getView().setTitle = "Map animation"
+        except Exception, e:
+            print(e)
+        try:
+            self.ampMap.getView().vb.setTitle = "Map animation"
+        except Exception, e:
+            print(e)                               
+    
+        try:
+            self.ampMap.getHistogramWidget().addItem(self.proxyWidget)
+        except Exception, E:
+            print(E)
+
+        self.play_animation()
 
 
     def analyse_internal(self):
@@ -626,6 +795,7 @@ class GuiWindowDocks:
         self.btnIsNormal.setChecked(1)
 
         self.statBar.showMessage("Finished repainting plots!", 2000)
+
 
 
     def save_as_file_selector(self):
