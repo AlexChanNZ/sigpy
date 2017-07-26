@@ -13,7 +13,7 @@ import sys
 import matplotlib
 matplotlib.use("TKAgg")
 
-from utils.np_utils import *
+from util_classes.np_utils import *
 
 from matplotlib import pyplot as plt
 

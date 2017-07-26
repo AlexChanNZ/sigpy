@@ -459,22 +459,16 @@ class GuiWindowDocks:
     def btn_animation_set_play(self):
         print("Setting play button")
 
-        # self.btnPlayPause.setText("")
         btnPlayIconPath = cg.graphicsPath + "btnPlayTiny.png"
-      
-        if os.path.exists(btnPlayIconPath):
 
-            self.btnPlayPause.setIcon(QtGui.QIcon(btnPlayIconPath))
-            self.btnPlayPause.setIconSize(QtCore.QSize(14,14))
-            try:
-                self.btnPlayPause.clicked.disconnect()
-            except Exception, e:
-                print(e)
+        self.btnPlayPause.setIcon(QtGui.QIcon(btnPlayIconPath))
+        try:
+            self.btnPlayPause.clicked.disconnect()
+        except Exception, e:
+            print(e)
 
-            self.btnPlayPause.clicked.connect(self.play_animation)            
+        self.btnPlayPause.clicked.connect(self.play_animation)            
 
-        else:
-            print("Cannot find icon file! ")
 
 
     def btn_animation_set_pause(self):
@@ -483,29 +477,22 @@ class GuiWindowDocks:
         self.btnPlayPause.setFixedHeight(14)
         self.btnPlayPause.setFixedWidth(14)
 
-
-        # self.btnPlayPause.setText("Pause Animation")
-
         btnPauseIconPath = cg.graphicsPath + "btnPauseTiny.png"
 
-        if os.path.exists(btnPauseIconPath):
+        self.btnPlayPause.setIcon(QtGui.QIcon(btnPauseIconPath))
+        self.btnPlayPause.setIconSize(QtCore.QSize(14,14))
 
-            self.btnPlayPause.setIcon(QtGui.QIcon(btnPauseIconPath))
-            self.btnPlayPause.setIconSize(QtCore.QSize(14,14))
+        try:
+            self.btnPlayPause.clicked.disconnect()
+        except Exception, e:
+            print(e)
 
-            try:
-                self.btnPlayPause.clicked.disconnect()
-            except Exception, e:
-                print(e)
-
-            self.btnPlayPause.clicked.connect(self.pause_animation)
+        self.btnPlayPause.clicked.connect(self.pause_animation)
 
 
 
     def play_animation(self):
-        # self.ampMap.Playing = True
-        # self.ampMap.frameRate = self.resumeFPS
-    
+        self.ampMap.Playing = True
 
         self.ampMap.play(self.ampMap.frameRate)
         self.btn_animation_set_pause()
@@ -515,9 +502,6 @@ class GuiWindowDocks:
     def pause_animation(self):
         self.ampMap.Playing = False
 
-        # self.resumeFPS = self.ampMap.frameRate
-        # self.ampMap.frameRate = 0
-        # self.speedSlider.setValue(self.ampMap.frameRate)
         self.ampMap.play(0)
         self.btn_animation_set_play()
 
@@ -526,22 +510,12 @@ class GuiWindowDocks:
         self.ampMap.frameRate = intVal
         self.fpsLabel.setText(str(int(intVal/30)))
 
-        self.ampMap.play(self.ampMap.frameRate)
-
-        # if (self.ampMap.frameRate==0) :
-        #     self.pause_animation()
-
+        if self.ampMap.Playing == True :
+            self.ampMap.play(self.ampMap.frameRate)
 
 
     def plot_amplitude_map(self):
-
-        # amplitudeMapWidget = pg.GraphicsLayoutWidget()
-        # vb = amplitudeMapWidget.addViewBox(row=2, col=1)
-
-        # self.playbackTimer = QTimer()
-        # self.playbackTimer.timeout.connect(self.increment_playback_time)
-        # self.playbackTimeChanged.connect(self.update_gui)
-
+        # Create animation window
         self.ampMap = pg.ImageView(name="Mapped Animation")
         cg.dat['SigPy']['gridData'] = map_channel_data_to_grid()
 
@@ -549,9 +523,11 @@ class GuiWindowDocks:
 
         self.ampMap.show()        
 
+        # Set default animation speed to 60 fps
         self.ampMap.frameRate = 60       
         self.resumeFPS = self.ampMap.frameRate
 
+        # Create play pause speed controls
         self.btnPlayPause = QtGui.QPushButton('')
         self.btn_animation_set_pause()
 
@@ -571,62 +547,28 @@ class GuiWindowDocks:
         self.LayoutWidgetPlayPauseSpeed = QtGui.QWidget()
         self.qGridLayout = QtGui.QGridLayout()
 
-        # self.qGridLayout.addLayout(self.qGridLayout, 1, 2, 1, 1)
-
         self.qGridLayout.setHorizontalSpacing(8)
         self.qGridLayout.setVerticalSpacing(0)
 
         self.qGridLayout.setContentsMargins(0,0,0,0)
 
         self.LayoutWidgetPlayPauseSpeed.setLayout(self.qGridLayout)
-        
-        # self.LayoutWidgetPlayPauseSpeed.setLayout(self.layout)
 
         self.qGridLayout.addWidget(self.btnPlayPause, 0,0, alignment=1)
         self.qGridLayout.addWidget(self.speedSlider, 0,1, alignment=1)
         self.qGridLayout.addWidget(self.fpsLabel, 0,2, alignment=0)
 
-        # self.layout.addWidget(self.btnPlayPause, 0,0,0,0)
-
         self.proxyWidget = QtGui.QGraphicsProxyWidget()
         self.proxyWidget.setWidget(self.LayoutWidgetPlayPauseSpeed)
         self.proxyWidget.setPos(0, 0)        
 
-
-        # newWin = pg.GraphicsWindow()
-        # p3 = newWin.addLayout(row=2, col=4)
-
-        # p3.addItem(self.btnPlayPauseWidget,row=2,col=4)               
-
-        # vb = win.addViewBox()
- 
-        # vb.addItem(gridData)
-     
-
-        # print("")
-        # print("Histogram Widget: ", self.ampMap.getHistogramWidget().childItems())
-        # print("")
-        # print("ImageItem: ",self.ampMap.getImageItem())
-        # print("")
-        print("ViewBox: ",self.ampMap.getView())
-        try:
-            self.ampMap.getView().vb.setTitle = "Map animation"
-        except Exception, e:
-            print(e) 
-        try:
-            self.ampMap.getView().setTitle = "Map animation"
-        except Exception, e:
-            print(e)
-        try:
-            self.ampMap.getView().vb.setTitle = "Map animation"
-        except Exception, e:
-            print(e)                               
-    
+        # Add play pause speed controls to widget
         try:
             self.ampMap.getHistogramWidget().addItem(self.proxyWidget)
         except Exception, E:
             print(E)
 
+        # Automatically start animation
         self.play_animation()
 
 
