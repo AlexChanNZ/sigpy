@@ -305,7 +305,7 @@ class GuiWindowDocks:
 
         ax = self.w1.getAxis('bottom')    #This is the trick  
 
-        tickInterval = 2000
+        tickInterval = int(data.shape[1] / 5) # Produce 5 tick labels per dataset
 
         tickRange = range(0, data.shape[1], tickInterval)
 
@@ -573,6 +573,7 @@ class GuiWindowDocks:
 
 
     def analyse_internal(self):
+
         self.s1.clear()
         self.s2.clear()
 
@@ -586,7 +587,6 @@ class GuiWindowDocks:
         for j in range(0,len(testData), int(overlap * windowSize)):
             if (len(testData[j:j+windowSize]) == windowSize):
                 samples.append(testData[j:j+windowSize])
-        
         
         sample_np = np.empty((len(samples), windowSize))
 
@@ -615,21 +615,22 @@ class GuiWindowDocks:
         winRange = 0
         winRangeMultiplier = 2 * windowSize
 
-        # for every x sec segment of data. if there are SW predictions within this segment, mark as sw.
+        # for every x segment of data. if there are SW predictions within this segment, mark as sw.
 
-        for j in range(0,len(testData), int(overlap * windowSize)):
+        for j in range(0, len(testData), int(overlap * windowSize)):
 
             count += 1
 
             if (len(np.where(swLocs == count)[0]) > 0 and (j > winRange)) :
-                maxIndex = np.argmax(testData[j : j+windowSize])
+
+                maxIndex = np.argmax(testData[j : j+(winRangeMultiplier)])
                 prediction[j+maxIndex] = 1
                 winRange = j + winRangeMultiplier #skip next 2 windows
 
 
         print("prediction.shape: ", prediction.shape)
 
-        print("nSW Predictions to X locations: ", len(np.where(prediction==1)[0]))
+        print("nSW Predictions to X locations: ", len(np.where(prediction == 1)[0]))
 
         linear_at_uncorrected = np.array(np.where(prediction == 1))
         # linear_at_uncorrected = np.array(np.where(preds == 1))
@@ -667,7 +668,7 @@ class GuiWindowDocks:
         for swPred in linear_at.transpose():
             if int(swPred % lengthData) not in remove_sync_point:
                 xIndex = int(swPred / lengthData)
-                yChannel = int(swPred % lengthData)
+                yChannel = int((swPred % lengthData))
                 pos.append([xIndex, yChannel])
 
         pos_np = np.asarray(pos).transpose()
@@ -680,8 +681,8 @@ class GuiWindowDocks:
             print("No events detected")
             return
 
-        self.s1.addPoints(x=pos_np[1], y=(pos_np[0]))
-        self.s2.addPoints(x=pos_np[1], y=(pos_np[0]))
+        self.s1.addPoints(x=pos_np[1], y=(pos_np[0]+0.75))
+        self.s2.addPoints(x=pos_np[1], y=(pos_np[0]+0.75))
 
         # Convert event co-ordinates to indices for  2d TOA to output to GEMS
         self.statBar.showMessage("Finished classifying slow wave events.", 1000)
