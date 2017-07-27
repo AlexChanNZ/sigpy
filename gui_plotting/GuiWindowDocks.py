@@ -162,7 +162,7 @@ class GuiWindowDocks:
         self.writeWEKABtn = QtGui.QPushButton('Write WEKA')
         self.readPredictedVal = QtGui.QPushButton('Read Weka CSV')
         self.analyseInternal = QtGui.QPushButton('Analyse Events')
-        self.amplitudeMapping = QtGui.QPushButton('Map Amplitude')
+        self.amplitudeMapping = QtGui.QPushButton('Mapped Animating')
 
         self.save_trained_data = QtGui.QPushButton('Save Training')
         self.load_trained_data = QtGui.QPushButton('Load Training')
@@ -172,7 +172,6 @@ class GuiWindowDocks:
         # self.dataTypeWidget.setLayout(self.dataTypeLayout)
 
         self.dataType=QtGui.QButtonGroup(w1) 
-
 
         self.btnPacing = QtGui.QRadioButton('Pacing')
         self.btnIsNormal = QtGui.QRadioButton('Normal')
@@ -294,18 +293,19 @@ class GuiWindowDocks:
         self.data = data
         # self.trainingDataPlot.set_plot_data(data)
         self.set_curve_item(nPlots, nSize)
+
         for i in range(nPlots):
             self.curves_left[i].setData(data[i])
             self.curves_right[i].setData(data[i])
 
-
         self.w1.setYRange(0, 100)
-        self.w1.setXRange(0, data.shape[1])   
 
+        xAxisMax = np.min([data.shape[1], 5000])
+        self.w1.setXRange(0, xAxisMax)   
 
         ax = self.w1.getAxis('bottom')    #This is the trick  
 
-        tickInterval = int(data.shape[1] / 5) # Produce 5 tick labels per dataset
+        tickInterval = int(xAxisMax / 6) # Produce 6 tick labels per scroll window
 
         tickRange = range(0, data.shape[1], tickInterval)
 
@@ -378,6 +378,7 @@ class GuiWindowDocks:
 
 
     def onClick(self, evt):
+
         pos = evt.scenePos()
         vb = self.w2.plotItem.vb
         if self.w2.sceneBoundingRect().contains(pos):
@@ -389,6 +390,7 @@ class GuiWindowDocks:
     The binding functions for different gui command buttons.
     """
     def add_as_events(self):
+
         self.trainingDataPlot.add_events()
         self.curve_bottom[0].set_plot_data(self.trainingDataPlot.plotDat.flatten()[0:self.trainingDataPlot.plotLength * 36])
         self.curve_bottom[1].set_plot_data(np.repeat(self.trainingDataPlot.plotEvent.flatten()[0:self.trainingDataPlot.plotLength], 36))
@@ -398,6 +400,7 @@ class GuiWindowDocks:
 
 
     def add_non_events(self):
+
         self.trainingDataPlot.add_non_events()
         self.curve_bottom[0].set_plot_data(self.trainingDataPlot.plotDat.flatten()[0:self.trainingDataPlot.plotLength * 36])
         self.curve_bottom[1].set_plot_data(np.repeat(self.trainingDataPlot.plotEvent.flatten()[0:self.trainingDataPlot.plotLength], 36))
@@ -407,6 +410,7 @@ class GuiWindowDocks:
 
 
     def undo(self):
+
         self.trainingDataPlot.undo()
         self.curve_bottom[0].set_plot_data(self.trainingDataPlot.plotDat.flatten()[0:self.trainingDataPlot.plotLength])
         self.curve_bottom[1].set_plot_data(self.trainingDataPlot.plotEvent.flatten()[0:self.trainingDataPlot.plotLength])
@@ -416,6 +420,7 @@ class GuiWindowDocks:
 
 
     def read_predicted(self):
+
         filename = QtGui.QFileDialog.getOpenFileName(None, 'Open ARFF WEKA generated output file')
         if filename == u'':
             return
@@ -435,6 +440,7 @@ class GuiWindowDocks:
 
 
     def writeWEKA_data(self):
+
         test_data = np.reshape(self.data, -1)
         data = self.trainingDataPlot.plotDat[0][0:self.trainingDataPlot.plotLength]
         events = self.trainingDataPlot.plotEvent[0][0:self.trainingDataPlot.plotLength]/5
@@ -444,6 +450,7 @@ class GuiWindowDocks:
 
 
     def process_thread(self, data, event=None):
+
         training_analyser = FeatureAnalyser()
         # FeatureAnalyser requires the 1d data to be passed as array of an array
         training_features = training_analyser.writeWEKA_data([data],(1, self.trainingDataPlot.plotLength))
@@ -457,6 +464,7 @@ class GuiWindowDocks:
 
 
     def btn_animation_set_play(self):
+
         print("Setting play button")
 
         btnPlayIconPath = cg.graphicsPath + "btnPlayTiny.png"
@@ -472,15 +480,16 @@ class GuiWindowDocks:
 
 
     def btn_animation_set_pause(self):
+
         print("Setting pause button")
 
-        self.btnPlayPause.setFixedHeight(14)
-        self.btnPlayPause.setFixedWidth(14)
+        self.btnPlayPause.setFixedHeight(20)
+        self.btnPlayPause.setFixedWidth(20)
 
         btnPauseIconPath = cg.graphicsPath + "btnPauseTiny.png"
 
         self.btnPlayPause.setIcon(QtGui.QIcon(btnPauseIconPath))
-        self.btnPlayPause.setIconSize(QtCore.QSize(14,14))
+        self.btnPlayPause.setIconSize(QtCore.QSize(20,20))
 
         try:
             self.btnPlayPause.clicked.disconnect()
@@ -494,7 +503,7 @@ class GuiWindowDocks:
     def play_animation(self):
         self.ampMap.Playing = True
 
-        self.ampMap.play(self.ampMap.frameRate)
+        self.ampMap.play(self.ampMap.currentFrameRate)
         self.btn_animation_set_pause()
 
 
@@ -506,26 +515,51 @@ class GuiWindowDocks:
         self.btn_animation_set_play()
 
 
+    def change_animation_data_to_live(self) :
+        pass
+
+    def change_animation_data_to_chans(self) :
+        gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
+        self.ampMap.setImage(gridDataToAnimate)
+
+    def change_animation_data_to_events(self) :
+        gridDataToAnimate = cg.dat['SigPy']['gridEventData']
+        self.ampMap.setImage(gridDataToAnimate)
+
+
     def change_frameRate(self, intVal):
-        self.ampMap.frameRate = intVal
-        self.fpsLabel.setText(str(int(intVal/30)))
+        self.ampMap.currentFrameRate = intVal
+        fpsLabelStr = str(round((self.ampMap.currentFrameRate / self.ampMap.realFrameRate),1)) + " x"
+        self.fpsLabel.setText(fpsLabelStr)
 
         if self.ampMap.Playing == True :
-            self.ampMap.play(self.ampMap.frameRate)
+            self.ampMap.play(self.ampMap.currentFrameRate)
 
 
     def plot_amplitude_map(self):
+
         # Create animation window
-        self.ampMap = pg.ImageView(name="Mapped Animation")
-        cg.dat['SigPy']['gridData'] = map_channel_data_to_grid()
+        self.ampMap = pg.ImageView()
+        self.ampMap.setWindowTitle("Mapped Animating")
 
-        self.ampMap.setImage(cg.dat['SigPy']['gridData'])
+        cg.dat['SigPy']['gridChannelData'] = map_channel_data_to_grid()
+        cg.dat['SigPy']['gridEventData'] = map_event_data_to_grid()
 
+        gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
+
+
+        self.ampMap.setImage(gridDataToAnimate)
+        self.ampMap.setLevels(0.5, 1.0)
         self.ampMap.show()        
 
-        # Set default animation speed to 60 fps
-        self.ampMap.frameRate = 60       
-        self.resumeFPS = self.ampMap.frameRate
+        ## ======= TOP NAV ===========
+        ## -- Play pause speed controls
+        # Set default animation speed to sampling frequency fps
+        self.ampMap.singleStepVal =  round((cg.dat['SigPy']['sampleRate'] / 2), 1)
+
+        self.ampMap.currentFrameRate = cg.dat['SigPy']['sampleRate']
+        self.ampMap.realFrameRate = cg.dat['SigPy']['sampleRate']
+        self.ampMap.currentFrameRate = self.ampMap.realFrameRate * 2 # Start at double speed
 
         # Create play pause speed controls
         self.btnPlayPause = QtGui.QPushButton('')
@@ -533,40 +567,74 @@ class GuiWindowDocks:
 
         self.speedSlider = QtGui.QSlider()
         self.speedSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.speedSlider.setMinimum(1)        
-        self.speedSlider.setMaximum(270)
-        self.speedSlider.setValue(self.ampMap.frameRate)
+        self.speedSlider.setMinimum(0)        
+        self.speedSlider.setMaximum(self.ampMap.singleStepVal * 16)
+        self.speedSlider.setValue(self.ampMap.currentFrameRate)
 
 
-        self.speedSlider.setSingleStep(30)
+        self.speedSlider.setSingleStep(self.ampMap.singleStepVal)
         
         self.speedSlider.valueChanged.connect(self.change_frameRate)
 
-        self.fpsLabel = QtGui.QLabel(str(int(self.ampMap.frameRate/30)))
+        fpsLabelStr = str(round((self.ampMap.currentFrameRate / self.ampMap.realFrameRate),1)) + " x"
+        self.fpsLabel = QtGui.QLabel(fpsLabelStr)
 
+
+        ## -- Data select -- live / events / amplitude
+
+
+
+
+
+
+
+
+        self.radioGrpAnimationData = QtGui.QButtonGroup() 
+
+        self.btnAmplitude = QtGui.QRadioButton('Amplitude')
+        self.btnLive = QtGui.QRadioButton('Live')
+        self.btnCNNEvents = QtGui.QRadioButton('CNN Events')
+
+        self.btnAmplitude.clicked.connect(self.change_animation_data_to_chans)
+        self.btnLive.clicked.connect(self.change_animation_data_to_live)
+        self.btnCNNEvents.clicked.connect(self.change_animation_data_to_events)        
+
+        self.btnAmplitude.setChecked(1);
+
+        self.radioGrpAnimationData.addButton(self.btnAmplitude, 0)
+        self.radioGrpAnimationData.addButton(self.btnLive, 1)
+        self.radioGrpAnimationData.addButton(self.btnCNNEvents, 2)
+
+        self.radioGrpAnimationData.setExclusive(True)        
+
+
+        ## -- Add toolbar widgets to a proxy container widget 
         self.LayoutWidgetPlayPauseSpeed = QtGui.QWidget()
         self.qGridLayout = QtGui.QGridLayout()
 
-        self.qGridLayout.setHorizontalSpacing(8)
-        self.qGridLayout.setVerticalSpacing(0)
+        self.qGridLayout.setHorizontalSpacing(14)
 
-        self.qGridLayout.setContentsMargins(0,0,0,0)
+        self.qGridLayout.setContentsMargins(8,0,8,0)
 
-        self.LayoutWidgetPlayPauseSpeed.setLayout(self.qGridLayout)
 
         self.qGridLayout.addWidget(self.btnPlayPause, 0,0, alignment=1)
         self.qGridLayout.addWidget(self.speedSlider, 0,1, alignment=1)
-        self.qGridLayout.addWidget(self.fpsLabel, 0,2, alignment=0)
+        self.qGridLayout.addWidget(self.fpsLabel, 0,2, alignment=1)
+
+        self.qGridLayout.addWidget(self.btnAmplitude, 0,3, alignment=1)
+        self.qGridLayout.addWidget(self.btnLive, 0,4, alignment=1)
+        self.qGridLayout.addWidget(self.btnCNNEvents, 0,5, alignment=1)
+
+
+        self.LayoutWidgetPlayPauseSpeed.setLayout(self.qGridLayout)
 
         self.proxyWidget = QtGui.QGraphicsProxyWidget()
         self.proxyWidget.setWidget(self.LayoutWidgetPlayPauseSpeed)
-        self.proxyWidget.setPos(0, 0)        
+        self.proxyWidget.setPos(0, 0)    
 
-        # Add play pause speed controls to widget
-        try:
-            self.ampMap.getHistogramWidget().addItem(self.proxyWidget)
-        except Exception, E:
-            print(E)
+        print("self.ampMap.ui: ", self.ampMap.ui)
+
+        self.ampMap.scene.addItem(self.proxyWidget)
 
         # Automatically start animation
         self.play_animation()
@@ -616,14 +684,13 @@ class GuiWindowDocks:
         winRangeMultiplier = 2 * windowSize
 
         # for every x segment of data. if there are SW predictions within this segment, mark as sw.
-
         for j in range(0, len(testData), int(overlap * windowSize)):
 
             count += 1
 
             if (len(np.where(swLocs == count)[0]) > 0 and (j > winRange)) :
-
-                maxIndex = np.argmax(testData[j : j+(winRangeMultiplier)])
+                baselinedDat = testData[j : j+(winRangeMultiplier)]
+                maxIndex = np.argmax(np.absolute(baselinedDat - baselinedDat.mean(axis=0)))
                 prediction[j+maxIndex] = 1
                 winRange = j + winRangeMultiplier #skip next 2 windows
 
@@ -640,7 +707,7 @@ class GuiWindowDocks:
 
         # Remove duplicated values ?
         for i in range(cols - 1):
-            if linear_at_uncorrected[0][i + 1] - linear_at_uncorrected[0][i] < 60 :
+            if (linear_at_uncorrected[0][i + 1] - linear_at_uncorrected[0][i] < 60) :
                 to_remove_index.append(i + 1)
 
         # Clear duplicated values to stop their removal
@@ -687,11 +754,7 @@ class GuiWindowDocks:
         # Convert event co-ordinates to indices for  2d TOA to output to GEMS
         self.statBar.showMessage("Finished classifying slow wave events.", 1000)
 
-        update_GEMS_data_with_TOAs(pos_np, nChans)      
-
-
-        # print("pos_np: ", pos_np)
-        # print("pos_np.shape: ", pos_np.shape)
+        update_GEMS_data_with_TOAs(pos_np, nChans)
 
 
 
