@@ -8,7 +8,7 @@ import numpy as np
 import scipy.io as sio
 
 import config_global as cg
-from sklearn.preprocessing import scale # for normalisation between 0 and 1
+from sklearn import preprocessing # for normalisation between 0 and 1
 
 
 
@@ -35,10 +35,11 @@ def normalise_chan_data(chanData) :
 	clippedData = norm_second_clip(norm_first_clip(chanData,-2000, 2000))
 
 	# Classic normalisation [0,1]
-	normedData = (clippedData - np.max(clippedData))/-np.ptp(clippedData)
-	print("normedData.shape: ", normedData.shape)
 
-	return normedData
+	normaliseData = np.apply_along_axis(preprocessing.MinMaxScaler().fit_transform, 1, clippedData)
+
+
+	return normaliseData
 
 
 

@@ -323,7 +323,6 @@ class GuiWindowDocks:
         # ax.setTicks([self.xLabels])
 
 
-
     def updatePlot(self):
 
         xpos = self.rect.pos()[0]
@@ -531,6 +530,8 @@ class GuiWindowDocks:
         self.ampMap.priorIndex = self.ampMap.currentIndex        
         self.ampMap.setImage(self.ampMap.gridDataToAnimate)
         self.ampMap.currentIndex = self.ampMap.priorIndex
+        self.ampMap.setLevels(0.5, 1.0)
+
         self.play_animation()        
 
 
@@ -550,13 +551,12 @@ class GuiWindowDocks:
         self.ampMap.setWindowTitle("Mapped Animating")
 
         cg.dat['SigPy']['gridChannelData'] = map_channel_data_to_grid()
-        cg.dat['SigPy']['gridEventData'] = convert_event_data_to_grid()
+        cg.dat['SigPy']['gridEventData'] = map_event_data_to_grid_with_trailing_edge()
 
         gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
 
 
         self.ampMap.setImage(gridDataToAnimate)
-        self.ampMap.setLevels(0.5, 1.0)
         self.ampMap.show()        
 
         ## ======= TOP NAV ===========
@@ -590,12 +590,6 @@ class GuiWindowDocks:
         ## -- Data select -- live / events / amplitude
 
 
-
-
-
-
-
-
         self.radioGrpAnimationData = QtGui.QButtonGroup() 
 
         self.btnAmplitude = QtGui.QRadioButton('Amplitude')
@@ -624,7 +618,6 @@ class GuiWindowDocks:
         self.qGridLayout.setHorizontalSpacing(14)
 
         self.qGridLayout.setContentsMargins(8,0,8,0)
-
 
         self.qGridLayout.addWidget(self.btnPlayPause, 0,0, alignment=1)
         self.qGridLayout.addWidget(self.speedSlider, 0,1, alignment=1)
@@ -661,7 +654,7 @@ class GuiWindowDocks:
         windowSize = 36
         overlap = 0.1
         samples = []
-        for j in range(0,len(testData), int(overlap * windowSize)):
+        for j in range(1,len(testData)-1, int(overlap * windowSize)):
             if (len(testData[j:j+windowSize]) == windowSize):
                 samples.append(testData[j:j+windowSize])
         
