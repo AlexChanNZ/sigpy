@@ -88,11 +88,9 @@ def update_GEMS_data_with_TOAs(pos_np, nChans) :
 
 
 
-    ## Iterate through indexes and chans and convert to ToA and GEMS compatible indexes
+    ## Iterate through indices and chans and convert to ToA and GEMS compatible indexes
     for sampleIndex, sampleChan in zip(pos_np[1], pos_np[0]) :
         
-        print("sampleIndex: ", sampleIndex)
-
         if not (int(sampleChan) == int(lastSampleChan)) and (lastSampleChan > -1):  
 
             print("toaChanIndices: ", toaChanIndices)        

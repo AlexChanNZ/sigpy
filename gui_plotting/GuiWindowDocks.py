@@ -43,7 +43,7 @@ from ml_classes.SlowWaveCNN import SlowWaveCNN
 import config_global as cg
 from file_io.gems_sigpy import *
 from signal_processing.preprocessing import preprocess
-from signal_processing.mapping import map_channel_data_to_grid
+from signal_processing.mapping import *
 
 
 # For debugging purps
@@ -519,12 +519,19 @@ class GuiWindowDocks:
         pass
 
     def change_animation_data_to_chans(self) :
-        gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
-        self.ampMap.setImage(gridDataToAnimate)
+        self.ampMap.gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
+        self.change_animation_data()
+
 
     def change_animation_data_to_events(self) :
-        gridDataToAnimate = cg.dat['SigPy']['gridEventData']
-        self.ampMap.setImage(gridDataToAnimate)
+        self.ampMap.gridDataToAnimate = cg.dat['SigPy']['gridEventData']
+        self.change_animation_data()
+
+    def change_animation_data(self) :
+        self.ampMap.priorIndex = self.ampMap.currentIndex        
+        self.ampMap.setImage(self.ampMap.gridDataToAnimate)
+        self.ampMap.currentIndex = self.ampMap.priorIndex
+        self.play_animation()        
 
 
     def change_frameRate(self, intVal):
@@ -543,7 +550,7 @@ class GuiWindowDocks:
         self.ampMap.setWindowTitle("Mapped Animating")
 
         cg.dat['SigPy']['gridChannelData'] = map_channel_data_to_grid()
-        cg.dat['SigPy']['gridEventData'] = map_event_data_to_grid()
+        cg.dat['SigPy']['gridEventData'] = convert_event_data_to_grid()
 
         gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
 
@@ -592,8 +599,9 @@ class GuiWindowDocks:
         self.radioGrpAnimationData = QtGui.QButtonGroup() 
 
         self.btnAmplitude = QtGui.QRadioButton('Amplitude')
-        self.btnLive = QtGui.QRadioButton('Live')
         self.btnCNNEvents = QtGui.QRadioButton('CNN Events')
+        self.btnLive = QtGui.QRadioButton('Live')
+
 
         self.btnAmplitude.clicked.connect(self.change_animation_data_to_chans)
         self.btnLive.clicked.connect(self.change_animation_data_to_live)
@@ -602,8 +610,9 @@ class GuiWindowDocks:
         self.btnAmplitude.setChecked(1);
 
         self.radioGrpAnimationData.addButton(self.btnAmplitude, 0)
-        self.radioGrpAnimationData.addButton(self.btnLive, 1)
-        self.radioGrpAnimationData.addButton(self.btnCNNEvents, 2)
+        self.radioGrpAnimationData.addButton(self.btnCNNEvents, 1)
+        self.radioGrpAnimationData.addButton(self.btnLive, 2)
+
 
         self.radioGrpAnimationData.setExclusive(True)        
 
@@ -622,8 +631,8 @@ class GuiWindowDocks:
         self.qGridLayout.addWidget(self.fpsLabel, 0,2, alignment=1)
 
         self.qGridLayout.addWidget(self.btnAmplitude, 0,3, alignment=1)
-        self.qGridLayout.addWidget(self.btnLive, 0,4, alignment=1)
-        self.qGridLayout.addWidget(self.btnCNNEvents, 0,5, alignment=1)
+        self.qGridLayout.addWidget(self.btnCNNEvents, 0,4, alignment=1)
+        self.qGridLayout.addWidget(self.btnLive, 0,5, alignment=1)
 
 
         self.LayoutWidgetPlayPauseSpeed.setLayout(self.qGridLayout)
@@ -706,14 +715,15 @@ class GuiWindowDocks:
         to_remove_index = []
 
         # Remove duplicated values ?
-        for i in range(cols - 1):
-            if (linear_at_uncorrected[0][i + 1] - linear_at_uncorrected[0][i] < 60) :
-                to_remove_index.append(i + 1)
+        # for i in range(cols - 1):
+        #     if (linear_at_uncorrected[0][i + 1] - linear_at_uncorrected[0][i] < 60) :
+        #         to_remove_index.append(i + 1)
 
-        # Clear duplicated values to stop their removal
-        to_remove_index = []
+        # # Clear duplicated values to stop their removal
+        # to_remove_index = []
 
-        linear_at = np.delete(linear_at_uncorrected, to_remove_index)
+        # linear_at = np.delete(linear_at_uncorrected, to_remove_index)
+        linear_at = linear_at_uncorrected
 
         pos = []
         lengthData = len(self.data[0])
@@ -724,19 +734,19 @@ class GuiWindowDocks:
         for val in linear_at.transpose():
             sync_events.append(int(val % lengthData))
 
-        remove_sync_point = set([x for x in sync_events if sync_events.count(x) > 600])
+        # remove_sync_point = set([x for x in sync_events if sync_events.count(x) > 600])
 
-        # Clear sync points that are marked for removal:
-        remove_sync_point.clear()
+        # # Clear sync points that are marked for removal:
+        # remove_sync_point.clear()
 
         # Remove the sync events from the actual array
 
         # for val in linear_at.transpose():
         for swPred in linear_at.transpose():
-            if int(swPred % lengthData) not in remove_sync_point:
-                xIndex = int(swPred / lengthData)
-                yChannel = int((swPred % lengthData))
-                pos.append([xIndex, yChannel])
+            # if int(swPred % lengthData) not in remove_sync_point:
+            xIndex = int(swPred / lengthData)
+            yChannel = int((swPred % lengthData))
+            pos.append([xIndex, yChannel])
 
         pos_np = np.asarray(pos).transpose()
 
