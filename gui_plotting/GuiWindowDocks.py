@@ -9,6 +9,8 @@ import os
 import numpy as np
 import platform
 import time
+from threading import Thread
+
 
 
 
@@ -44,6 +46,8 @@ import config_global as cg
 from file_io.gems_sigpy import *
 from signal_processing.preprocessing import preprocess
 from signal_processing.mapping import *
+
+from signal_processing.livedata import LiveData
 
 
 # For debugging purps
@@ -93,6 +97,7 @@ class GuiWindowDocks:
         self.undoBtn.clicked.connect(lambda: self.undo())
         self.writeWEKABtn.clicked.connect(lambda: self.writeWEKA_data())
         self.readPredictedVal.clicked.connect(lambda: self.read_predicted())
+
         self.amplitudeMapping.clicked.connect(lambda: self.plot_amplitude_map())        
         self.analyseInternal.clicked.connect(lambda: self.analyse_internal())
         self.save_trained_data.clicked.connect(lambda: self.save_trained())
@@ -153,9 +158,12 @@ class GuiWindowDocks:
 
 
     def add_dock_widgets_controls(self):
+        w1l = QtGui.QVBoxLayout()
 
         w1 = pg.LayoutWidget()
         label = QtGui.QLabel('Usage info')
+        label.setAlignment(QtCore.Qt.AlignTop)
+
         self.saveBtn_events = QtGui.QPushButton('Save As Events')
         self.saveBtn_nonEvents = QtGui.QPushButton('Save As Non-Events')
         self.undoBtn = QtGui.QPushButton('Undo')
@@ -171,7 +179,12 @@ class GuiWindowDocks:
         # self.dataTypeWidget=QtGui.QWidget(self)  # central widget
         # self.dataTypeWidget.setLayout(self.dataTypeLayout)
 
-        self.dataType=QtGui.QButtonGroup(w1) 
+        # Control for toggling type of data whether pacing or normal
+        dataTypeLabel = QtGui.QLabel('Physiology:')
+        dataTypeLabel.setAlignment(QtCore.Qt.AlignBottom)
+
+
+        self.dataType=QtGui.QButtonGroup() 
 
         self.btnPacing = QtGui.QRadioButton('Pacing')
         self.btnIsNormal = QtGui.QRadioButton('Normal')
@@ -180,6 +193,21 @@ class GuiWindowDocks:
         self.dataType.addButton(self.btnPacing, 0)
         self.dataType.addButton(self.btnIsNormal, 1)
         self.dataType.setExclusive(True)
+
+        # Control for toggling whether to capture live data
+        liveDataLabel = QtGui.QLabel('Data capture:')
+        liveDataLabel.setAlignment(QtCore.Qt.AlignBottom)
+
+
+        self.liveDataBtnGrp=QtGui.QButtonGroup()
+
+        self.btnLive = QtGui.QRadioButton('Live')
+        self.btnRecorded = QtGui.QRadioButton('Recorded')
+        self.btnRecorded.setChecked(1);
+
+        self.liveDataBtnGrp.addButton(self.btnLive, 0)
+        self.liveDataBtnGrp.addButton(self.btnRecorded, 1)
+        self.liveDataBtnGrp.setExclusive(True)  
 
 
         w1.addWidget(label, row=self.add_one(), col=0)
@@ -195,8 +223,17 @@ class GuiWindowDocks:
 
         w1.addWidget(self.save_trained_data, row=self.add_one(), col=0)
         w1.addWidget(self.load_trained_data, row=self.add_one(), col=0)
+
+        w1.addWidget(liveDataLabel, row=self.add_one(), col=0)
+        w1.addWidget(self.btnLive,row=self.add_one(),col=0)
+        w1.addWidget(self.btnRecorded,row=self.add_one(), col=0)        
+
+        w1.addWidget(dataTypeLabel, row=self.add_one(), col=0)
         w1.addWidget(self.btnIsNormal,row=self.add_one(),col=0)
         w1.addWidget(self.btnPacing,row=self.add_one(), col=0)
+
+        # w1l.setAlignment(QtCore.Qt.AlignTop)
+
         self.d_control.addWidget(w1, row=1, colspan=1)
 
 
@@ -365,7 +402,6 @@ class GuiWindowDocks:
         self.load_trained_data.clicked.connect(lambda: self.load_trained())
 
 
-
     def mouseMoved(self, evt):
         pos = evt[0]
         vb = self.w2.plotItem.vb
@@ -373,7 +409,6 @@ class GuiWindowDocks:
             mousePoint = vb.mapSceneToView(pos)
             self.vLine.setPos(mousePoint.x())
             self.hLine.setPos(mousePoint.y())
-
 
 
     def onClick(self, evt):
@@ -397,7 +432,6 @@ class GuiWindowDocks:
         self.w3.setYRange(0, 1, padding=0)
 
 
-
     def add_non_events(self):
 
         self.trainingDataPlot.add_non_events()
@@ -407,7 +441,6 @@ class GuiWindowDocks:
         self.w3.setYRange(0, 1, padding=0)
 
 
-
     def undo(self):
 
         self.trainingDataPlot.undo()
@@ -415,7 +448,6 @@ class GuiWindowDocks:
         self.curve_bottom[1].set_plot_data(self.trainingDataPlot.plotEvent.flatten()[0:self.trainingDataPlot.plotLength])
         self.w3.setXRange(0, self.trainingDataPlot.plotLength * 36, padding=0)
         self.w3.setYRange(0, 1, padding=0)
-
 
 
     def read_predicted(self):
@@ -437,7 +469,6 @@ class GuiWindowDocks:
         self.s2.addPoints(x=pos_np[1], y=(pos_np[0]))
 
 
-
     def writeWEKA_data(self):
 
         test_data = np.reshape(self.data, -1)
@@ -445,7 +476,6 @@ class GuiWindowDocks:
         events = self.trainingDataPlot.plotEvent[0][0:self.trainingDataPlot.plotLength]/5
         Process(target=self.process_thread, args=(data, events)).start()
         Process(target=self.process_thread, args=[test_data]).start()
-
 
 
     def process_thread(self, data, event=None):
@@ -461,7 +491,6 @@ class GuiWindowDocks:
         weka_write.arff_write(event)
 
 
-
     def btn_animation_set_play(self):
 
         print("Setting play button")
@@ -475,7 +504,6 @@ class GuiWindowDocks:
             print(e)
 
         self.btnPlayPause.clicked.connect(self.play_animation)            
-
 
 
     def btn_animation_set_pause(self):
@@ -498,13 +526,11 @@ class GuiWindowDocks:
         self.btnPlayPause.clicked.connect(self.pause_animation)
 
 
-
     def play_animation(self):
         self.ampMap.Playing = True
 
         self.ampMap.play(self.ampMap.currentFrameRate)
         self.btn_animation_set_pause()
-
 
 
     def pause_animation(self):
@@ -515,22 +541,66 @@ class GuiWindowDocks:
 
 
     def change_animation_data_to_live(self) :
-        pass
+        self.ampMap.LiveDataSelected = True
+
+        # Check if live data capture thread has been started -- if not, start
+        if not self.LiveData.isAlive():
+            try:
+                self.LiveData.start()
+            except (KeyboardInterrupt, SystemExit):
+                sys.exit()            
+
+        self.change_animation_data()
+        
 
     def change_animation_data_to_chans(self) :
+        self.ampMap.LiveDataSelected = False
+
         self.ampMap.gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
         self.change_animation_data()
 
 
     def change_animation_data_to_events(self) :
+        self.ampMap.LiveDataSelected = False
+
         self.ampMap.gridDataToAnimate = cg.dat['SigPy']['gridEventData']
         self.change_animation_data()
 
+
+    # Thread to keep pulling in live data 
+    def read_liveData_buffer_Thread(self):
+
+        print("In data pulling thread")
+
+        while True:
+
+            self.ampMap.bufferedData = self.LiveData.bufferedData
+
+            # If buffer has some data, then preprocess, map to grid, and animate
+            if (self.ampMap.bufferedData.shape[0] > 0) :
+                print("Found me some data -- buffer size: ", self.ampMap.bufferedData.shape[0])
+                preprocessedData = preprocess(self.ampMap.bufferedData)
+                mappedPreprocessedData = map_channel_data_to_grid(preprocessedData)
+                self.ampMap.setImage(mappedPreprocessedData)
+                self.play_animation()
+
+            time.sleep(0.1)
+
+            if not self.ampMap.LiveDataSelected :
+                break
+
     def change_animation_data(self) :
         self.ampMap.priorIndex = self.ampMap.currentIndex        
-        self.ampMap.setImage(self.ampMap.gridDataToAnimate)
         self.ampMap.currentIndex = self.ampMap.priorIndex
         self.ampMap.setLevels(0.5, 1.0)
+
+        if self.ampMap.LiveDataSelected :
+            print("Attemping to start data pulling thread")
+            pullingThread = Thread(name='read_liveData_buffer_Thread', target=self.read_liveData_buffer_Thread)
+            pullingThread.start()
+        else :
+            self.ampMap.setImage(self.ampMap.gridDataToAnimate)
+
 
         self.play_animation()        
 
@@ -550,8 +620,19 @@ class GuiWindowDocks:
         self.ampMap = pg.ImageView()
         self.ampMap.setWindowTitle("Mapped Animating")
 
+        # Preload data
+
         cg.dat['SigPy']['gridChannelData'] = map_channel_data_to_grid()
-        cg.dat['SigPy']['gridEventData'] = map_event_data_to_grid_with_trailing_edge()
+
+        # Create thread to capture (or simulate) live data
+        self.LiveData = LiveData()
+        self.ampMap.LiveDataSelected = False
+
+
+        if 'toaIndx' not in cg.dat['SigPy'] :
+            self.statBar.showMessage("Note! To plot CNN SW event data, please first run analyse events.")
+        else:
+            cg.dat['SigPy']['gridEventData'] = map_event_data_to_grid_with_trailing_edge()
 
         gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
 
