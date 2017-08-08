@@ -11,10 +11,10 @@ import numpy as np
 import scipy.io as sio
 import sys
 import matplotlib
+
 matplotlib.use("TKAgg")
 
 from matplotlib import pyplot as plt
-
 
 
 # Internal dependencies
@@ -27,8 +27,6 @@ from gui_plotting.GuiWindowDocks import GuiWindowDocks
 
 import numpy as np
 np.set_printoptions(linewidth=1000, precision=3, threshold=np.inf)
-
-
 
 """
 Gastric data 
@@ -43,7 +41,6 @@ dataFileAndRoot = cg.dataRoot + defaultDataFile
 Gastric data normal
 """
 #data = '/media/hpc/codes/MatLab/normalise_data/pig32_exp2_normal.mat'
-
 """
 Intestine data
 """
@@ -65,7 +62,7 @@ cg.set_trained_file(str(cg.loaded_data_file) + str('_trained.dat'))
 #vals = np.array(mat_contents['mark_cardiac'])
 
 # Start Qt event loop unless running in interactive mode.
-if __name__ == '__main__':
+if __name__ == '__main__' :
 
     # Run GUI
     gui = GuiWindowDocks()

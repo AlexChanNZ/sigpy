@@ -16,9 +16,17 @@ from threading import Thread
 
 from multiprocessing import Process
 # Main GUI support
+
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 from pyqtgraph.dockarea import *
+
+# import VideoTemplate_pyside as VideoTemplate
+# import VideoTemplate_pyqt as VideoTemplate
+
+from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget, RawImageWidget
+
+
 # import cPickle as pickle # Python3 
 import pickle
 import matplotlib as mpl  
@@ -100,6 +108,8 @@ class GuiWindowDocks:
 
         self.amplitudeMapping.clicked.connect(lambda: self.plot_amplitude_map())        
         self.analyseInternal.clicked.connect(lambda: self.analyse_internal())
+        self.btnViewLiveData.clicked.connect(lambda: self.view_live_data())
+
         self.save_trained_data.clicked.connect(lambda: self.save_trained())
         self.load_trained_data.clicked.connect(lambda: self.load_trained())
 
@@ -170,7 +180,8 @@ class GuiWindowDocks:
         self.writeWEKABtn = QtGui.QPushButton('Write WEKA')
         self.readPredictedVal = QtGui.QPushButton('Read Weka CSV')
         self.analyseInternal = QtGui.QPushButton('Analyse Events')
-        self.amplitudeMapping = QtGui.QPushButton('Mapped Animating')
+        self.amplitudeMapping = QtGui.QPushButton('Amplitude and Event Mapping')
+        self.btnViewLiveData = QtGui.QPushButton('Live Mapping')
 
         self.save_trained_data = QtGui.QPushButton('Save Training')
         self.load_trained_data = QtGui.QPushButton('Load Training')
@@ -199,16 +210,6 @@ class GuiWindowDocks:
         liveDataLabel.setAlignment(QtCore.Qt.AlignBottom)
 
 
-        self.liveDataBtnGrp=QtGui.QButtonGroup()
-
-        self.btnLive = QtGui.QRadioButton('Live')
-        self.btnRecorded = QtGui.QRadioButton('Recorded')
-        self.btnRecorded.setChecked(1);
-
-        self.liveDataBtnGrp.addButton(self.btnLive, 0)
-        self.liveDataBtnGrp.addButton(self.btnRecorded, 1)
-        self.liveDataBtnGrp.setExclusive(True)  
-
 
         w1.addWidget(label, row=self.add_one(), col=0)
         # w1.addWidget(self.loadRawData, row=self.add_one(), col=0)
@@ -220,13 +221,12 @@ class GuiWindowDocks:
         w1.addWidget(self.readPredictedVal, row=self.add_one(),col=0)
         w1.addWidget(self.analyseInternal, row=self.add_one(), col=0)
         w1.addWidget(self.amplitudeMapping, row=self.add_one(), col=0)
+        w1.addWidget(self.btnViewLiveData, row=self.add_one(), col=0)
+
 
         w1.addWidget(self.save_trained_data, row=self.add_one(), col=0)
         w1.addWidget(self.load_trained_data, row=self.add_one(), col=0)
-
-        w1.addWidget(liveDataLabel, row=self.add_one(), col=0)
-        w1.addWidget(self.btnLive,row=self.add_one(),col=0)
-        w1.addWidget(self.btnRecorded,row=self.add_one(), col=0)        
+     
 
         w1.addWidget(dataTypeLabel, row=self.add_one(), col=0)
         w1.addWidget(self.btnIsNormal,row=self.add_one(),col=0)
@@ -397,7 +397,10 @@ class GuiWindowDocks:
         self.writeWEKABtn.clicked.connect(lambda: self.writeWEKA_data())
         self.readPredictedVal.clicked.connect(lambda: self.read_predicted())
         self.amplitudeMapping.clicked.connect(lambda: self.plot_amplitude_map())
+        self.btnViewLiveData.clicked.connect(lambda: self.view_live_data())
+
         self.analyseInternal.clicked.connect(lambda: self.analyse_internal())
+
         self.save_trained_data.clicked.connect(lambda: self.save_trained())
         self.load_trained_data.clicked.connect(lambda: self.load_trained())
 
@@ -491,236 +494,6 @@ class GuiWindowDocks:
         weka_write.arff_write(event)
 
 
-    def btn_animation_set_play(self):
-
-        print("Setting play button")
-
-        btnPlayIconPath = cg.graphicsPath + "btnPlayTiny.png"
-
-        self.btnPlayPause.setIcon(QtGui.QIcon(btnPlayIconPath))
-        try:
-            self.btnPlayPause.clicked.disconnect()
-        except Exception, e:
-            print(e)
-
-        self.btnPlayPause.clicked.connect(self.play_animation)            
-
-
-    def btn_animation_set_pause(self):
-
-        print("Setting pause button")
-
-        self.btnPlayPause.setFixedHeight(20)
-        self.btnPlayPause.setFixedWidth(20)
-
-        btnPauseIconPath = cg.graphicsPath + "btnPauseTiny.png"
-
-        self.btnPlayPause.setIcon(QtGui.QIcon(btnPauseIconPath))
-        self.btnPlayPause.setIconSize(QtCore.QSize(20,20))
-
-        try:
-            self.btnPlayPause.clicked.disconnect()
-        except Exception, e:
-            print(e)
-
-        self.btnPlayPause.clicked.connect(self.pause_animation)
-
-
-    def play_animation(self):
-        self.ampMap.Playing = True
-
-        self.ampMap.play(self.ampMap.currentFrameRate)
-        self.btn_animation_set_pause()
-
-
-    def pause_animation(self):
-        self.ampMap.Playing = False
-
-        self.ampMap.play(0)
-        self.btn_animation_set_play()
-
-
-    def change_animation_data_to_live(self) :
-        self.ampMap.LiveDataSelected = True
-
-        # Check if live data capture thread has been started -- if not, start
-        if not self.LiveData.isAlive():
-            try:
-                self.LiveData.start()
-            except (KeyboardInterrupt, SystemExit):
-                sys.exit()            
-
-        self.change_animation_data()
-        
-
-    def change_animation_data_to_chans(self) :
-        self.ampMap.LiveDataSelected = False
-
-        self.ampMap.gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
-        self.change_animation_data()
-
-
-    def change_animation_data_to_events(self) :
-        self.ampMap.LiveDataSelected = False
-
-        self.ampMap.gridDataToAnimate = cg.dat['SigPy']['gridEventData']
-        self.change_animation_data()
-
-
-    # Thread to keep pulling in live data 
-    def read_liveData_buffer_Thread(self):
-
-        print("In data pulling thread")
-
-        while True:
-
-            self.ampMap.bufferedData = self.LiveData.bufferedData
-
-            # If buffer has some data, then preprocess, map to grid, and animate
-            if (self.ampMap.bufferedData.shape[0] > 0) :
-                print("Found me some data -- buffer size: ", self.ampMap.bufferedData.shape[0])
-                preprocessedData = preprocess(self.ampMap.bufferedData)
-                mappedPreprocessedData = map_channel_data_to_grid(preprocessedData)
-                self.ampMap.setImage(mappedPreprocessedData)
-                self.play_animation()
-
-            time.sleep(0.1)
-
-            if not self.ampMap.LiveDataSelected :
-                break
-
-    def change_animation_data(self) :
-        self.ampMap.priorIndex = self.ampMap.currentIndex        
-        self.ampMap.currentIndex = self.ampMap.priorIndex
-        self.ampMap.setLevels(0.5, 1.0)
-
-        if self.ampMap.LiveDataSelected :
-            print("Attemping to start data pulling thread")
-            pullingThread = Thread(name='read_liveData_buffer_Thread', target=self.read_liveData_buffer_Thread)
-            pullingThread.start()
-        else :
-            self.ampMap.setImage(self.ampMap.gridDataToAnimate)
-
-
-        self.play_animation()        
-
-
-    def change_frameRate(self, intVal):
-        self.ampMap.currentFrameRate = intVal
-        fpsLabelStr = str(round((self.ampMap.currentFrameRate / self.ampMap.realFrameRate),1)) + " x"
-        self.fpsLabel.setText(fpsLabelStr)
-
-        if self.ampMap.Playing == True :
-            self.ampMap.play(self.ampMap.currentFrameRate)
-
-
-    def plot_amplitude_map(self):
-
-        # Create animation window
-        self.ampMap = pg.ImageView()
-        self.ampMap.setWindowTitle("Mapped Animating")
-
-        # Preload data
-
-        cg.dat['SigPy']['gridChannelData'] = map_channel_data_to_grid()
-
-        # Create thread to capture (or simulate) live data
-        self.LiveData = LiveData()
-        self.ampMap.LiveDataSelected = False
-
-
-        if 'toaIndx' not in cg.dat['SigPy'] :
-            self.statBar.showMessage("Note! To plot CNN SW event data, please first run analyse events.")
-        else:
-            cg.dat['SigPy']['gridEventData'] = map_event_data_to_grid_with_trailing_edge()
-
-        gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
-
-
-        self.ampMap.setImage(gridDataToAnimate)
-        self.ampMap.show()        
-
-        ## ======= TOP NAV ===========
-        ## -- Play pause speed controls
-        # Set default animation speed to sampling frequency fps
-        self.ampMap.singleStepVal =  round((cg.dat['SigPy']['sampleRate'] / 2), 1)
-
-        self.ampMap.currentFrameRate = cg.dat['SigPy']['sampleRate']
-        self.ampMap.realFrameRate = cg.dat['SigPy']['sampleRate']
-        self.ampMap.currentFrameRate = self.ampMap.realFrameRate * 2 # Start at double speed
-
-        # Create play pause speed controls
-        self.btnPlayPause = QtGui.QPushButton('')
-        self.btn_animation_set_pause()
-
-        self.speedSlider = QtGui.QSlider()
-        self.speedSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.speedSlider.setMinimum(0)        
-        self.speedSlider.setMaximum(self.ampMap.singleStepVal * 16)
-        self.speedSlider.setValue(self.ampMap.currentFrameRate)
-
-
-        self.speedSlider.setSingleStep(self.ampMap.singleStepVal)
-        
-        self.speedSlider.valueChanged.connect(self.change_frameRate)
-
-        fpsLabelStr = str(round((self.ampMap.currentFrameRate / self.ampMap.realFrameRate),1)) + " x"
-        self.fpsLabel = QtGui.QLabel(fpsLabelStr)
-
-
-        ## -- Data select -- live / events / amplitude
-
-
-        self.radioGrpAnimationData = QtGui.QButtonGroup() 
-
-        self.btnAmplitude = QtGui.QRadioButton('Amplitude')
-        self.btnCNNEvents = QtGui.QRadioButton('CNN Events')
-        self.btnLive = QtGui.QRadioButton('Live')
-
-
-        self.btnAmplitude.clicked.connect(self.change_animation_data_to_chans)
-        self.btnLive.clicked.connect(self.change_animation_data_to_live)
-        self.btnCNNEvents.clicked.connect(self.change_animation_data_to_events)        
-
-        self.btnAmplitude.setChecked(1);
-
-        self.radioGrpAnimationData.addButton(self.btnAmplitude, 0)
-        self.radioGrpAnimationData.addButton(self.btnCNNEvents, 1)
-        self.radioGrpAnimationData.addButton(self.btnLive, 2)
-
-
-        self.radioGrpAnimationData.setExclusive(True)        
-
-
-        ## -- Add toolbar widgets to a proxy container widget 
-        self.LayoutWidgetPlayPauseSpeed = QtGui.QWidget()
-        self.qGridLayout = QtGui.QGridLayout()
-
-        self.qGridLayout.setHorizontalSpacing(14)
-
-        self.qGridLayout.setContentsMargins(8,0,8,0)
-
-        self.qGridLayout.addWidget(self.btnPlayPause, 0,0, alignment=1)
-        self.qGridLayout.addWidget(self.speedSlider, 0,1, alignment=1)
-        self.qGridLayout.addWidget(self.fpsLabel, 0,2, alignment=1)
-
-        self.qGridLayout.addWidget(self.btnAmplitude, 0,3, alignment=1)
-        self.qGridLayout.addWidget(self.btnCNNEvents, 0,4, alignment=1)
-        self.qGridLayout.addWidget(self.btnLive, 0,5, alignment=1)
-
-
-        self.LayoutWidgetPlayPauseSpeed.setLayout(self.qGridLayout)
-
-        self.proxyWidget = QtGui.QGraphicsProxyWidget()
-        self.proxyWidget.setWidget(self.LayoutWidgetPlayPauseSpeed)
-        self.proxyWidget.setPos(0, 0)    
-
-        print("self.ampMap.ui: ", self.ampMap.ui)
-
-        self.ampMap.scene.addItem(self.proxyWidget)
-
-        # Automatically start animation
-        self.play_animation()
 
 
     def analyse_internal(self):
@@ -838,7 +611,302 @@ class GuiWindowDocks:
         # Convert event co-ordinates to indices for  2d TOA to output to GEMS
         self.statBar.showMessage("Finished classifying slow wave events.", 1000)
 
-        update_GEMS_data_with_TOAs(pos_np, nChans)
+        update_GEMS_data_with_TOAs(pos_np, nChans)        
+
+
+
+    def btn_animation_set_play(self):
+
+        print("Setting play button")
+
+        btnPlayIconPath = cg.graphicsPath + "btnPlayTiny.png"
+
+        self.btnPlayPause.setIcon(QtGui.QIcon(btnPlayIconPath))
+        try:
+            self.btnPlayPause.clicked.disconnect()
+        except Exception, e:
+            print(e)
+
+        self.btnPlayPause.clicked.connect(self.play_animation)            
+
+
+
+    def btn_animation_set_pause(self):
+
+        print("Setting pause button")
+
+        self.btnPlayPause.setFixedHeight(20)
+        self.btnPlayPause.setFixedWidth(20)
+
+        btnPauseIconPath = cg.graphicsPath + "btnPauseTiny.png"
+
+        self.btnPlayPause.setIcon(QtGui.QIcon(btnPauseIconPath))
+        self.btnPlayPause.setIconSize(QtCore.QSize(20,20))
+
+        try:
+            self.btnPlayPause.clicked.disconnect()
+        except Exception, e:
+            print(e)
+
+        self.btnPlayPause.clicked.connect(self.pause_animation)
+
+
+
+    def play_animation(self):
+        self.ampMap.Playing = True
+
+        self.ampMap.play(self.ampMap.currentFrameRate)
+        self.btn_animation_set_pause()
+
+
+    def pause_animation(self):
+        self.ampMap.Playing = False
+
+        self.ampMap.play(0)
+        self.btn_animation_set_play()
+
+
+
+    def change_animation_data_to_chans(self) :
+
+        self.ampMap.gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
+        self.change_animation_data()
+
+
+
+    def change_animation_data_to_events(self) :
+
+        self.ampMap.gridDataToAnimate = cg.dat['SigPy']['gridEventData']
+        self.change_animation_data()
+
+
+
+    def change_animation_data(self) :
+
+        self.ampMap.priorIndex = self.ampMap.currentIndex        
+        self.ampMap.currentIndex = self.ampMap.priorIndex
+        self.ampMap.setLevels(0.5, 1.0)
+
+
+        self.ampMap.setImage(self.ampMap.gridDataToAnimate)
+
+        self.play_animation()        
+
+
+
+    def change_frameRate(self, intVal):
+
+        self.ampMap.currentFrameRate = intVal
+        fpsLabelStr = str(round((self.ampMap.currentFrameRate / self.ampMap.realFrameRate),1)) + " x"
+        self.fpsLabel.setText(fpsLabelStr)
+
+        if self.ampMap.Playing == True :
+            self.ampMap.play(self.ampMap.currentFrameRate)
+
+
+
+    def plot_amplitude_map(self):
+
+        # Create animation window
+        self.ampMap = pg.ImageView()
+        self.ampMap.setWindowTitle("Mapped Animating")
+
+        # Preload data
+
+        cg.dat['SigPy']['gridChannelData'] = map_channel_data_to_grid()
+
+
+
+        if 'toaIndx' not in cg.dat['SigPy'] :
+            self.statBar.showMessage("Note! To plot CNN SW event data, please first run analyse events.")
+        else:
+            cg.dat['SigPy']['gridEventData'] = map_event_data_to_grid_with_trailing_edge()
+
+        gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
+
+
+        self.ampMap.setImage(gridDataToAnimate)
+        self.ampMap.show()        
+
+        ## ======= TOP NAV ===========
+        ## -- Play pause speed controls
+        # Set default animation speed to sampling frequency fps
+        self.ampMap.singleStepVal = round((cg.dat['SigPy']['sampleRate'] / 2), 1)
+
+        self.ampMap.currentFrameRate = cg.dat['SigPy']['sampleRate']
+        self.ampMap.realFrameRate = cg.dat['SigPy']['sampleRate']
+        self.ampMap.currentFrameRate = self.ampMap.realFrameRate * 2 # Start at double speed
+
+        # Create play pause speed controls
+        self.btnPlayPause = QtGui.QPushButton('')
+        self.btn_animation_set_pause()
+
+        self.speedSlider = QtGui.QSlider()
+        self.speedSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.speedSlider.setMinimum(0)        
+        self.speedSlider.setMaximum(self.ampMap.singleStepVal * 16)
+        self.speedSlider.setValue(self.ampMap.currentFrameRate)
+
+
+        self.speedSlider.setSingleStep(self.ampMap.singleStepVal)
+        
+        self.speedSlider.valueChanged.connect(self.change_frameRate)
+
+        fpsLabelStr = str(round((self.ampMap.currentFrameRate / self.ampMap.realFrameRate),1)) + " x"
+        self.fpsLabel = QtGui.QLabel(fpsLabelStr)
+
+
+        ## -- Data select -- live / events / amplitude
+        self.radioGrpAnimationData = QtGui.QButtonGroup() 
+
+        self.btnAmplitude = QtGui.QRadioButton('Amplitude')
+        self.btnCNNEvents = QtGui.QRadioButton('CNN Events')
+        self.btnLive = QtGui.QRadioButton('Live')
+
+
+        self.btnAmplitude.clicked.connect(self.change_animation_data_to_chans)
+        self.btnCNNEvents.clicked.connect(self.change_animation_data_to_events)        
+
+        self.btnAmplitude.setChecked(1);
+
+        self.radioGrpAnimationData.addButton(self.btnAmplitude, 0)
+        self.radioGrpAnimationData.addButton(self.btnCNNEvents, 1)
+
+
+        self.radioGrpAnimationData.setExclusive(True)        
+
+
+        ## -- Add toolbar widgets to a proxy container widget 
+        self.LayoutWidgetPlayPauseSpeed = QtGui.QWidget()
+        self.qGridLayout = QtGui.QGridLayout()
+
+        self.qGridLayout.setHorizontalSpacing(14)
+
+        self.qGridLayout.setContentsMargins(8,0,8,0)
+
+        self.qGridLayout.addWidget(self.btnPlayPause, 0,0, alignment=1)
+        self.qGridLayout.addWidget(self.speedSlider, 0,1, alignment=1)
+        self.qGridLayout.addWidget(self.fpsLabel, 0,2, alignment=1)
+
+        self.qGridLayout.addWidget(self.btnAmplitude, 0,3, alignment=1)
+        self.qGridLayout.addWidget(self.btnCNNEvents, 0,4, alignment=1)
+
+        self.LayoutWidgetPlayPauseSpeed.setLayout(self.qGridLayout)
+
+        self.proxyWidget = QtGui.QGraphicsProxyWidget()
+        self.proxyWidget.setWidget(self.LayoutWidgetPlayPauseSpeed)
+        self.proxyWidget.setPos(0, 0)    
+
+        print("self.ampMap.ui: ", self.ampMap.ui)
+
+        self.ampMap.scene.addItem(self.proxyWidget)
+
+        # Automatically start animation
+        self.play_animation()
+
+
+
+    # Thread to keep pulling in live data 
+    def read_liveData_buffer_Thread(self):
+
+        print("In data pulling thread")
+        print("self.LiveData.timeBetweenSamples: ", self.LiveData.timeBetweenSamples)
+        nSamplesPerChunkIdealised=120
+
+        while True:
+
+            nSamplesCaptured = self.LiveData.bufferedChunk.shape[1]
+            print("nSamplesCaptured: ",nSamplesCaptured)
+
+            if nSamplesCaptured > nSamplesPerChunkIdealised :
+
+                timeBetweenSamplesAdjust = (nSamplesPerChunkIdealised * self.LiveData.timeBetweenSamples / nSamplesCaptured)
+
+                preprocessedData = preprocess(self.LiveData.bufferedChunk)
+                mappedPreprocessedData = map_channel_data_to_grid(preprocessedData)
+
+                print("preprocessedData.shape: ", preprocessedData.shape[1])
+
+                self.LiveData.lastFrame = self.LiveData.bufferedChunk[:,(nSamplesCaptured-1)].reshape(-1,1)
+                self.LiveData.bufferedChunk = self.LiveData.lastFrame #reset buffer
+                print("Buffer Reset!: ", self.LiveData.bufferedChunk.shape)
+                timeStartDisplayingFrames = time.time()
+
+                for frame in range(0, (mappedPreprocessedData.shape[0]-1)) :
+
+                    try:
+                        self.liveMapImageItem.setImage(mappedPreprocessedData[frame,:,:])
+                        # self.liveMapImageItem.show()
+                        # self.liveMapRawImageWidget.setImage(mappedPreprocessedData[frame,:,:])
+                    except Exception, e:
+                        print(e)
+
+                    nextFrameTime = timeStartDisplayingFrames + frame * timeBetweenSamplesAdjust
+                    # print("nextFrameTime: ",nextFrameTime)
+                    # print("currentFrameTime: ",time.time())
+                    sleepTime = nextFrameTime - time.time()
+                    # print("sleepTime: ", sleepTime)
+
+
+                    if sleepTime > 0 :
+                        time.sleep(sleepTime)
+
+                print(frame," frames displayed.")
+
+            else:
+
+                print("self.LiveData.bufferedChunk.shape[1]: ", self.LiveData.bufferedChunk.shape[1])
+                time.sleep(0.01)
+
+
+
+
+
+                
+    def view_live_data(self) :
+        print("Starting live view data")
+        # Create thread to capture (or simulate) live data
+        self.LiveData = LiveData()
+
+        # Check if live data capture thread has been started -- if not, start
+        if not self.LiveData.isAlive():
+            try:
+                self.LiveData.start()
+            except (KeyboardInterrupt, SystemExit):
+                sys.exit()   
+
+        # Create image item
+        self.liveMapWin = pg.GraphicsWindow() 
+        self.liveMapWin.setWindowTitle('Live Mapping')
+
+
+        self.liveMapViewBox = self.liveMapWin.addViewBox()
+
+        self.liveMapWin.setCentralItem(self.liveMapViewBox)
+        self.liveMapViewBox.setAspectLocked()
+
+
+
+        # ui.graphicsView.setCentralItem(vb)
+
+        self.liveMapImageItem = pg.ImageItem()
+        self.liveMapViewBox.addItem(self.liveMapImageItem)
+        # self.liveMapWidgetLayout = pg.LayoutWidget()
+        self.liveMapRawImageWidget = RawImageWidget(self.liveMapWin)
+        self.liveMapViewBox.addItem(self.liveMapImageItem)
+
+        # self.liveMapWin.setLayout(self.liveMapGraphicsLayout)
+
+        # self.liveMapViewBox.addItem(self.liveMapRawImageWidget)
+
+        print("Attemping to start data pulling thread")
+        self.displayLiveDataThread = Thread(name='read_liveData_buffer_Thread', target=self.read_liveData_buffer_Thread)
+        
+        if not self.displayLiveDataThread.isAlive():
+            try:
+                self.displayLiveDataThread.start()
+            except (KeyboardInterrupt, SystemExit):
+                sys.exit()         
 
 
 

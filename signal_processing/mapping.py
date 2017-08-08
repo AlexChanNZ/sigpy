@@ -10,7 +10,6 @@ def get_grid() :
 	return grid
 
 
-
 def map_channel_data_to_grid(inData=None) :
 	if inData is None:
 		inData = cg.dat['SigPy']['normData']
@@ -19,7 +18,6 @@ def map_channel_data_to_grid(inData=None) :
 
 	gridData = np.zeros(shape=(inData.shape[1], grid.shape[0], grid.shape[1]), dtype=float)
 
-	print(grid)
 	for r in range(0, grid.shape[0]) :
 		for c in range(0, grid.shape[1]) :
 			chanNum = int(grid[r,c])
@@ -27,7 +25,6 @@ def map_channel_data_to_grid(inData=None) :
 				gridData[:,r,c] = inData[(chanNum-1),:]
 
 	return gridData
-
 
 
 def map_event_data_to_grid(inData=None) :
@@ -48,7 +45,6 @@ def map_event_data_to_grid(inData=None) :
 					eventGrid[eventIndicesForChan,r,c] = 1		
 
 	return eventGrid
-
 
 
 def map_event_data_to_grid_with_trailing_edge() :

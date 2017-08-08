@@ -60,7 +60,7 @@ def save_GEMS_SigPy_file(fileNameAndPath):
     cg.dat.pop('GEMSorig_toapp', None)
     cg.dat.pop('GEMSorig_bdfdef', None)
     # cg.dat.pop('bdfdef', None) #popping bdfdef because of UI control compatibility. 
-    #EDIT: Appears saving UIControl component as struct still works in GEMS.
+    # EDIT: Appears saving UIControl component as struct still works in GEMS.
 
     # Save GEMS file
     sio.savemat(fileNameAndPath, cg.dat)
