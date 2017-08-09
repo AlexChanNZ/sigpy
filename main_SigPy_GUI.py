@@ -53,7 +53,6 @@ load_GEMS_mat_into_SigPy(dataFileAndRoot)
 if not cg.dat['SigPy'].get('normData') :
     cg.dat['SigPy']['normData'] = preprocess(cg.dat['SigPy']['filtData'])
 
-
 cg.set_data_file_name((dataFileAndRoot.rsplit('/', 1)[1]))
 cg.set_test_file_name(str(cg.loaded_data_file) + str('_test.arff'))
 cg.set_training_file_name(str(cg.loaded_data_file) + str('_training.arff'))

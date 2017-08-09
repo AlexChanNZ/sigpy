@@ -9,6 +9,7 @@ import os
 import numpy as np
 import platform
 import time
+import threading
 from threading import Thread
 
 
@@ -506,7 +507,7 @@ class GuiWindowDocks:
         testData = np.reshape(self.data, -1)
 
         windowSize = 36
-        overlap = 0.1
+        overlap = 0.2
         samples = []
         for j in range(1,len(testData)-1, int(overlap * windowSize)):
             if (len(testData[j:j+windowSize]) == windowSize):
@@ -659,6 +660,7 @@ class GuiWindowDocks:
         self.btn_animation_set_pause()
 
 
+
     def pause_animation(self):
         self.ampMap.Playing = False
 
@@ -805,66 +807,117 @@ class GuiWindowDocks:
         self.play_animation()
 
 
+    def preprocess_buffer_and_housekeeping(self):
+
+        winStartIndex = self.LiveData.priorBufferedChunk.shape[1]
+        preprocessWindowChunks = np.hstack((self.LiveData.priorBufferedChunk, self.LiveData.bufferedChunk))
+    
+
+        # Reset buffer keeping only the last frame in memory
+
+        self.lastFrame = self.LiveData.bufferedChunk[:,(self.nSamplesCaptured-1)].reshape(-1,1)                
+        self.LiveData.bufferedChunk = self.lastFrame
+        print("Buffer Reset!")
+
+        # Increase buffer size until it reaches self.desiredPriorChunkSize
+        priorBufferChunkStartIndex = preprocessWindowChunks.shape[1] - self.desiredPriorChunkSize
+
+        if priorBufferChunkStartIndex > 0 :
+            self.LiveData.priorBufferedChunk = preprocessWindowChunks[:,winStartIndex:]
+
+        else :            
+             self.LiveData.priorBufferedChunk = preprocessWindowChunks
+        
+
+        preprocessedData = preprocess(preprocessWindowChunks)
+        # preprocessedData = preprocessWindowChunks
+
+        self.mappedPreprocessedData = map_channel_data_to_grid(preprocessedData[:, winStartIndex:])       
+        print("self.mappedPreprocessedData.shape: ", self.mappedPreprocessedData.shape)
+
+
+
+    # Display chunk at a rate matching the capture rate
+    def live_animate(self) :
+
+        timeBetweenSamplesAdjust = (self.nSamplesPerChunkIdealised * self.LiveData.timeBetweenSamples / self.nSamplesCaptured)
+        timeStartDisplayingFrames = time.time()
+
+        # self.liveMapViewBox.removeItem(self.liveMapImageItem)
+        # self.liveMapViewBox.addItem(self.liveMapImageItem)
+
+        for frame in range(0, self.mappedPreprocessedData.shape[0] ) :
+
+            try:
+                self.lockDisplayThread.acquire() 
+                self.liveMapImageItem.setImage(self.mappedPreprocessedData[frame,:,:])
+                self.lockDisplayThread.release() 
+
+            except Exception, e:
+                print(e)
+
+            nextFrameTime = timeStartDisplayingFrames + frame * timeBetweenSamplesAdjust
+            # print("nextFrameTime: ",nextFrameTime)
+            # print("currentFrameTime: ",time.time())
+            sleepTime = nextFrameTime - time.time()
+            # print("sleepTime: ", sleepTime)
+
+            if sleepTime > 0 :
+                time.sleep(sleepTime)
+
+        print(frame," frames displayed.")
+
+
+
+
 
     # Thread to keep pulling in live data 
     def read_liveData_buffer_Thread(self):
 
         print("In data pulling thread")
         print("self.LiveData.timeBetweenSamples: ", self.LiveData.timeBetweenSamples)
-        nSamplesPerChunkIdealised=120
+        self.nSamplesPerChunkIdealised = 30
+        self.desiredPriorChunkSize =  self.nSamplesPerChunkIdealised * 4
+
+
+        self.priorBufferedChunk = self.LiveData.bufferedChunk
 
         while True:
 
-            nSamplesCaptured = self.LiveData.bufferedChunk.shape[1]
-            print("nSamplesCaptured: ",nSamplesCaptured)
+            # Get number of samples captured
+            self.nSamplesCaptured = self.LiveData.bufferedChunk.shape[1]
+            print("Frames captured: ", self.nSamplesCaptured)
+            # print("nSamplesCaptured: ",self.nSamplesCaptured)
 
-            if nSamplesCaptured > nSamplesPerChunkIdealised :
+            # If number of samples captured exceeds the idealised buffer size
+            # then preprocess, reset buffer and animate
 
-                timeBetweenSamplesAdjust = (nSamplesPerChunkIdealised * self.LiveData.timeBetweenSamples / nSamplesCaptured)
+            if self.nSamplesCaptured >= self.nSamplesPerChunkIdealised :
 
-                preprocessedData = preprocess(self.LiveData.bufferedChunk)
-                mappedPreprocessedData = map_channel_data_to_grid(preprocessedData)
+                # print("nSamplesCaptured ",self.nSamplesCaptured," meets criteria.")
 
-                print("preprocessedData.shape: ", preprocessedData.shape[1])
+                self.preprocess_buffer_and_housekeeping()
 
-                self.LiveData.lastFrame = self.LiveData.bufferedChunk[:,(nSamplesCaptured-1)].reshape(-1,1)
-                self.LiveData.bufferedChunk = self.LiveData.lastFrame #reset buffer
-                print("Buffer Reset!: ", self.LiveData.bufferedChunk.shape)
-                timeStartDisplayingFrames = time.time()
-
-                for frame in range(0, (mappedPreprocessedData.shape[0]-1)) :
-
-                    try:
-                        self.liveMapImageItem.setImage(mappedPreprocessedData[frame,:,:])
-                        # self.liveMapImageItem.show()
-                        # self.liveMapRawImageWidget.setImage(mappedPreprocessedData[frame,:,:])
-                    except Exception, e:
-                        print(e)
-
-                    nextFrameTime = timeStartDisplayingFrames + frame * timeBetweenSamplesAdjust
-                    # print("nextFrameTime: ",nextFrameTime)
-                    # print("currentFrameTime: ",time.time())
-                    sleepTime = nextFrameTime - time.time()
-                    # print("sleepTime: ", sleepTime)
-
-
-                    if sleepTime > 0 :
-                        time.sleep(sleepTime)
-
-                print(frame," frames displayed.")
+                # Live animation
+                self.live_animate()
 
             else:
 
-                print("self.LiveData.bufferedChunk.shape[1]: ", self.LiveData.bufferedChunk.shape[1])
+                # Buffer isn't big enough, give it some more time to produce frames
                 time.sleep(0.01)
+            
+            if not self.liveMapWin.isVisible():
+
+                print("Display thread stopping.")
+                self.LiveData.shouldStop = True
+                break
 
 
 
-
-
-                
     def view_live_data(self) :
+
         print("Starting live view data")
+
         # Create thread to capture (or simulate) live data
         self.LiveData = LiveData()
 
@@ -874,6 +927,7 @@ class GuiWindowDocks:
                 self.LiveData.start()
             except (KeyboardInterrupt, SystemExit):
                 sys.exit()   
+
 
         # Create image item
         self.liveMapWin = pg.GraphicsWindow() 
@@ -885,21 +939,21 @@ class GuiWindowDocks:
         self.liveMapWin.setCentralItem(self.liveMapViewBox)
         self.liveMapViewBox.setAspectLocked()
 
-
-
         # ui.graphicsView.setCentralItem(vb)
 
         self.liveMapImageItem = pg.ImageItem()
         self.liveMapViewBox.addItem(self.liveMapImageItem)
+
         # self.liveMapWidgetLayout = pg.LayoutWidget()
-        self.liveMapRawImageWidget = RawImageWidget(self.liveMapWin)
-        self.liveMapViewBox.addItem(self.liveMapImageItem)
 
         # self.liveMapWin.setLayout(self.liveMapGraphicsLayout)
 
         # self.liveMapViewBox.addItem(self.liveMapRawImageWidget)
 
-        print("Attemping to start data pulling thread")
+        self.lockDisplayThread = threading.Lock()
+
+
+        print("Attemping to start data viewing thread")
         self.displayLiveDataThread = Thread(name='read_liveData_buffer_Thread', target=self.read_liveData_buffer_Thread)
         
         if not self.displayLiveDataThread.isAlive():
