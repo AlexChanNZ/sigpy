@@ -15,7 +15,7 @@ import numpy as np
 
 
 #user defined imports
-import config_global as cg
+import config_global as sp
 
 
 newCmap = 'OrRd'#'Blues'
@@ -150,5 +150,8 @@ def plot_swImage_grid(swData, swLabels, linePlot=False, iTitle=""):
             break
     
     return swImages
+
+
+    
 
 

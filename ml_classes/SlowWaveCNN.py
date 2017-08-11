@@ -28,7 +28,7 @@ from nolearn.lasagne import visualize
 # User defined imports
 from gui_plotting.mpl_plots import *
 
-import config_global as cg
+import config_global as sp
 
 class SlowWaveCNN:
 
@@ -62,7 +62,7 @@ class SlowWaveCNN:
 
 
     def load_training_dataset(self, dataType):
-        trainingDataPlotPath = cg.dataRoot + '/' + dataType
+        trainingDataPlotPath = sp.dataRoot + '/' + dataType
         nFiles = 0
 
         for trainingFile in os.listdir(trainingDataPlotPath):
@@ -103,11 +103,11 @@ class SlowWaveCNN:
 
         if self.label_array.size == 0:
 
-            if (type_data_set):
+            if (type_data_set is 1):
                 print("Using Normal CNN")
                 nnFileName = "nn_normal.cnn"
 
-            elif (type_data_set == False):
+            elif (type_data_set is 0):
                 print("Using Pacing CNN")
 
                 nnFileName = "nn_pacing.cnn"
@@ -116,7 +116,7 @@ class SlowWaveCNN:
                 print("No type selected")  
                 return
 
-        nnFileNameAndPath = cg.nnPath + nnFileName            
+        nnFileNameAndPath = sp.nnPath + nnFileName            
 
         #Load CNN instead of training
         try:
@@ -129,10 +129,10 @@ class SlowWaveCNN:
 
             print("Training neural net")
                 
-            if (type_data_set == 0):
+            if (type_data_set is 1):
                 X_train, Y_train = self.load_training_dataset("normal")
 
-            elif (type_data_set == 1):
+            elif (type_data_set is 0):
                 X_train, Y_train = self.load_training_dataset("pacing")
                 nnFileName = "nn_pacing.cnn"
 

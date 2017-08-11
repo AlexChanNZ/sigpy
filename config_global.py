@@ -18,6 +18,8 @@ dataRoot = current_working_directory + '/data/'
 nnPath = current_working_directory + '/ml_models/'
 graphicsPath = current_working_directory + '/graphics/'
 
+userDataStore = '/Users/m/_/Data/SigPy/'
+
 dataForAnalysis = None # Raw import of data (likely a GEMS .mat file)
 dataForAnalysisFileName = None
 

@@ -51,15 +51,14 @@ from file_io.ARFFcsvReader import ARFFcsvReader
 from ml_classes.WekaInterface import WekaInterface
 from ml_classes.FeatureAnalyser import FeatureAnalyser
 from ml_classes.SlowWaveCNN import SlowWaveCNN
-import config_global as cg
+import config_global as sp
 from file_io.gems_sigpy import *
-from signal_processing.preprocessing import preprocess
+from signal_processing.preprocessing import *
 from signal_processing.mapping import *
 
 from signal_processing.livedata import LiveData
 
 
-# For debugging purps
 
 class GuiWindowDocks:
 
@@ -68,6 +67,14 @@ class GuiWindowDocks:
         Initialise the properties of the GUI. This part of the code sets the docks, sizes
         :return: NULL
         """
+        self.curves_left = []
+        self.curves_right = []
+        self.curve_bottom = []
+        self.elec = []
+        self.data = []
+
+        self.set_current_dataset()       
+
 
         self.rowNum = 0
         self.app = QtGui.QApplication([])
@@ -78,45 +85,68 @@ class GuiWindowDocks:
         self.d_train = Dock("Training Signal", size=(500, 50))
         area.addDock(self.d_control, 'left')
         area.addDock(self.d_plot, 'right')
-        area.addDock(self.d_train, 'bottom', self.d_plot)
+        # area.addDock(self.d_train, 'bottom', self.d_plot)
 
-        self.win.setWindowTitle("PySig")
 
         self.win.setCentralWidget(area)
         self.win.resize(1500, 800)
-        self.win.setWindowTitle('PySig Training')
+        self.win.setWindowTitle('SigPy')
         self.add_dock_widgets_controls()
         self.add_menu_bar()
 
-        self.curves_left = []
-        self.curves_right = []
-        self.curve_bottom = []
+
         self.add_dock_widgets_plots()
         self.set_crosshair()
         self.set_rect_region_ROI()
-        self.elec = []
-        self.data = []
 
-        self.set_plot_data(cg.dat['SigPy']['normData'], cg.dat['SigPy']['normData'].shape[0], cg.dat['SigPy']['normData'].shape[1])
+
 
         self.trainingDataPlot = TrainingDataPlot()
+
+    
+        self.set_plot_data(self.data, self.nChans, self.nSamples)
+
         
-        self.saveBtn_events.clicked.connect(lambda: self.add_as_events())
-        self.saveBtn_nonEvents.clicked.connect(lambda: self.add_non_events())
-        self.undoBtn.clicked.connect(lambda: self.undo())
-        self.writeWEKABtn.clicked.connect(lambda: self.writeWEKA_data())
-        self.readPredictedVal.clicked.connect(lambda: self.read_predicted())
-
         self.amplitudeMapping.clicked.connect(lambda: self.plot_amplitude_map())        
-        self.analyseInternal.clicked.connect(lambda: self.analyse_internal())
-        self.btnViewLiveData.clicked.connect(lambda: self.view_live_data())
+        self.btnFindSWEvents.clicked.connect(lambda: self.compute_slow_wave_events())
+        self.btnShowPacingEvents.clicked.connect(lambda: self.show_compute_pacing_events())
+        self.btnShowPacingCleaned.clicked.connect(lambda: self.show_cleaned_pacing())
+        self.btnShowPacingCleaned.clicked.connect(lambda: self.show_cleaned_pacing())
+        self.btnPacing.clicked.connect(lambda: self.change_physiology_to_pacing())
+        self.btnIsNormal.clicked.connect(lambda: self.change_physiology_to_normal())
 
-        self.save_trained_data.clicked.connect(lambda: self.save_trained())
-        self.load_trained_data.clicked.connect(lambda: self.load_trained())
+
+
+        self.btnViewLiveData.clicked.connect(lambda: self.view_live_data())
 
         self.win.showMaximized()
         self.win.show()
 
+
+    def set_current_dataset(self) :
+        # Set initial plot data
+
+        self.data = sp.dat['SigPy']['dataToPlot']
+        self.nChans = self.data.shape[0]
+        self.nSamples = self.data.shape[1]
+        self.timeBetweenSamples = sp.dat['SigPy']['timeBetweenSamples']
+        self.timeStart = sp.dat['SigPy']['timeStart'] 
+
+        if "PacingMarkers" in sp.dat['SigPy'].keys() :
+            self.MarkersPacing = sp.dat['SigPy']['MarkersPacing']
+            print("PacingMarkers key found!")
+
+        else :
+            self.MarkersPacing = []
+
+        if "SWMarkers" in sp.dat['SigPy'].keys() :
+            self.markersSWs = sp.dat['SigPy']['MarkersSW']
+            print("SWMarkers key found!")
+
+        else :
+            self.markersSWs = [] 
+
+        self.isNormal = sp.dat['SigPy']['dataIsNormal']
 
 
     def add_one(self):
@@ -169,70 +199,69 @@ class GuiWindowDocks:
 
 
     def add_dock_widgets_controls(self):
+
         w1l = QtGui.QVBoxLayout()
 
         w1 = pg.LayoutWidget()
-        label = QtGui.QLabel('Usage info')
-        label.setAlignment(QtCore.Qt.AlignTop)
 
-        self.saveBtn_events = QtGui.QPushButton('Save As Events')
-        self.saveBtn_nonEvents = QtGui.QPushButton('Save As Non-Events')
-        self.undoBtn = QtGui.QPushButton('Undo')
-        self.writeWEKABtn = QtGui.QPushButton('Write WEKA')
-        self.readPredictedVal = QtGui.QPushButton('Read Weka CSV')
-        self.analyseInternal = QtGui.QPushButton('Analyse Events')
-        self.amplitudeMapping = QtGui.QPushButton('Amplitude and Event Mapping')
-        self.btnViewLiveData = QtGui.QPushButton('Live Mapping')
-
-        self.save_trained_data = QtGui.QPushButton('Save Training')
-        self.load_trained_data = QtGui.QPushButton('Load Training')
-
-        # self.dataTypeLayout=QtGui.QHBoxLayout()  # layout for the central widget
-        # self.dataTypeWidget=QtGui.QWidget(self)  # central widget
-        # self.dataTypeWidget.setLayout(self.dataTypeLayout)
+        self.dataType=QtGui.QButtonGroup() 
 
         # Control for toggling type of data whether pacing or normal
         dataTypeLabel = QtGui.QLabel('Physiology:')
         dataTypeLabel.setAlignment(QtCore.Qt.AlignBottom)
 
-
-        self.dataType=QtGui.QButtonGroup() 
-
         self.btnPacing = QtGui.QRadioButton('Pacing')
         self.btnIsNormal = QtGui.QRadioButton('Normal')
-        self.btnIsNormal.setChecked(1);
 
         self.dataType.addButton(self.btnPacing, 0)
         self.dataType.addButton(self.btnIsNormal, 1)
-        self.dataType.setExclusive(True)
+        self.dataType.setExclusive(True)     
+        # print("ISNormal ? ", self.isNormal)
 
-        # Control for toggling whether to capture live data
-        liveDataLabel = QtGui.QLabel('Data capture:')
-        liveDataLabel.setAlignment(QtCore.Qt.AlignBottom)
+        if self.isNormal is 0 :
+            self.change_physiology_to_pacing()        
+        else:
+            self.change_physiology_to_normal()        
 
-
-
-        w1.addWidget(label, row=self.add_one(), col=0)
-        # w1.addWidget(self.loadRawData, row=self.add_one(), col=0)
-
-        w1.addWidget(self.saveBtn_events, row=self.add_one(), col=0)
-        w1.addWidget(self.saveBtn_nonEvents, row=self.add_one(), col=0)
-        w1.addWidget(self.undoBtn, row=self.add_one(), col=0)
-        w1.addWidget(self.writeWEKABtn, row=self.add_one(), col=0)
-        w1.addWidget(self.readPredictedVal, row=self.add_one(),col=0)
-        w1.addWidget(self.analyseInternal, row=self.add_one(), col=0)
-        w1.addWidget(self.amplitudeMapping, row=self.add_one(), col=0)
-        w1.addWidget(self.btnViewLiveData, row=self.add_one(), col=0)
-
-
-        w1.addWidget(self.save_trained_data, row=self.add_one(), col=0)
-        w1.addWidget(self.load_trained_data, row=self.add_one(), col=0)
-     
 
         w1.addWidget(dataTypeLabel, row=self.add_one(), col=0)
         w1.addWidget(self.btnIsNormal,row=self.add_one(),col=0)
         w1.addWidget(self.btnPacing,row=self.add_one(), col=0)
 
+        # label = QtGui.QLabel('Usage info')
+        # label.setAlignment(QtCore.Qt.AlignTop)
+
+       
+        self.btnFindSWEvents = QtGui.QPushButton('Find Slow-Wave Events')
+        self.amplitudeMapping = QtGui.QPushButton('Amplitude and Event Mapping')
+        self.btnViewLiveData = QtGui.QPushButton('Live Mapping')
+        self.btnShowPacingEvents = QtGui.QPushButton('Show Pacing Events')
+        self.btnShowPacingCleaned = QtGui.QPushButton('Show Cleaned Pacing')
+
+
+
+        # self.dataTypeLayout=QtGui.QHBoxLayout()  # layout for the central widget
+        # self.dataTypeWidget=QtGui.QWidget(self)  # central widget
+        # self.dataTypeWidget.setLayout(self.dataTypeLayout)
+
+
+
+
+
+
+        # Control for toggling whether to capture live data
+        liveDataLabel = QtGui.QLabel('Data capture:')
+        liveDataLabel.setAlignment(QtCore.Qt.AlignBottom)
+
+        # w1.addWidget(label, row=self.add_one(), col=0)
+        # w1.addWidget(self.loadRawData, row=self.add_one(), col=0)
+
+        w1.addWidget(self.btnFindSWEvents, row=self.add_one(), col=0)
+        w1.addWidget(self.btnShowPacingEvents, row=self.add_one(), col=0)
+        w1.addWidget(self.btnShowPacingCleaned, row=self.add_one(), col=0)
+
+        w1.addWidget(self.amplitudeMapping, row=self.add_one(), col=0)
+        w1.addWidget(self.btnViewLiveData, row=self.add_one(), col=0)
         # w1l.setAlignment(QtCore.Qt.AlignTop)
 
         self.d_control.addWidget(w1, row=1, colspan=1)
@@ -243,13 +272,13 @@ class GuiWindowDocks:
 
         self.w1 = pg.PlotWidget(title="Plots of the slow-wave data")
         self.w2 = pg.PlotWidget(title="Plots of zoomed-in slow-wave data")
-        self.w3 = pg.PlotWidget(title="Selected Data for Training")
+
         c = pg.PlotCurveItem(pen=pg.mkPen('r', width=2))
         c_event = pg.PlotCurveItem(pen=pg.mkPen('y', width=2))
         self.curve_bottom.append(c)
         self.curve_bottom.append(c_event)
-        self.w3.addItem(c)
-        self.w3.addItem(c_event)
+
+
         nPlots = 256
 
         self.w1.setYRange(0, 100)
@@ -268,18 +297,22 @@ class GuiWindowDocks:
             self.w2.addItem(c2)
 
 
-        self.s1 = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 255, 255, 120))
-        self.s2 = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 255, 255, 120))
-        self.w1.addItem(self.s1)
-        self.w2.addItem(self.s2)
+        self.s1sw = pg.ScatterPlotItem(size=8, pen=pg.mkPen(None), brush=pg.mkBrush(255, 255, 255, 120))
+        self.s2sw = pg.ScatterPlotItem(size=8, pen=pg.mkPen(None), brush=pg.mkBrush(255, 255, 255, 120))
+
+        self.w1.addItem(self.s1sw)
+        self.w2.addItem(self.s2sw)
         self.d_plot.addWidget(self.w1, row=0, col=0)
         self.d_plot.addWidget(self.w2, row=0, col=1)
-        self.d_train.addWidget(self.w3, row=0, col=0)
         self.proxy = pg.SignalProxy(self.w2.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
         self.w2.scene().sigMouseClicked.connect(self.onClick)
         self.w2.sigXRangeChanged.connect(self.updateRegion)
         self.w2.sigYRangeChanged.connect(self.updateRegion)
 
+        self.s1pacing = pg.ScatterPlotItem(size=8, pen=pg.mkPen(None), brush=pg.mkBrush(0, 255, 0, 120))
+        self.s2pacing = pg.ScatterPlotItem(size=8, pen=pg.mkPen(None), brush=pg.mkBrush(0, 255, 0, 120))        
+        self.w1.addItem(self.s1pacing)
+        self.w2.addItem(self.s2pacing)
 
 
     def set_crosshair(self):
@@ -329,10 +362,11 @@ class GuiWindowDocks:
     def set_plot_data(self, data, nPlots, nSize):
         
         self.data = data
-        # self.trainingDataPlot.set_plot_data(data)
+        self.trainingDataPlot.set_plot_data(data)
         self.set_curve_item(nPlots, nSize)
-
-        for i in range(nPlots):
+        print("self.data.shape: ", self.data.shape, " nPlots: ", nPlots, " nSize: ", nSize)
+        for i in range(nPlots) :
+            print("i: ", i)
             self.curves_left[i].setData(data[i])
             self.curves_right[i].setData(data[i])
 
@@ -348,13 +382,12 @@ class GuiWindowDocks:
         tickRange = range(0, data.shape[1], tickInterval)
 
         # Convert indices to time for ticks -- multiply indices by time between samples and add original starting time.
-        tickLabels = [str(round(i*cg.dat['SigPy']['timeBetweenSamples']+cg.dat['SigPy']['timeStart'],2)) for i in tickRange]
+        tickLabels = [str(round(i*sp.dat['SigPy']['timeBetweenSamples']+sp.dat['SigPy']['timeStart'],2)) for i in tickRange]
 
         print(tickLabels)
 
         ticks = [list(zip(tickRange, tickLabels))]
         print(ticks)
-
 
         ax.setTicks(ticks)
              # self.xLabels = "print xLabels."
@@ -380,6 +413,16 @@ class GuiWindowDocks:
 
 
 
+    def change_physiology_to_normal(self) :
+        self.isNormal = 1
+        self.btnIsNormal.setChecked(1)
+
+
+    def change_physiology_to_pacing(self) :
+        self.isNormal = 0        
+        self.btnPacing.setChecked(1)
+
+
     def repaint_plots(self):
 
         self.curves_left = []
@@ -392,18 +435,20 @@ class GuiWindowDocks:
         self.data = []
         
         self.trainingDataPlot = TrainingDataPlot()
-        self.saveBtn_events.clicked.connect(lambda: self.add_as_events())
-        self.saveBtn_nonEvents.clicked.connect(lambda: self.add_non_events())
-        self.undoBtn.clicked.connect(lambda: self.undo())
-        self.writeWEKABtn.clicked.connect(lambda: self.writeWEKA_data())
-        self.readPredictedVal.clicked.connect(lambda: self.read_predicted())
-        self.amplitudeMapping.clicked.connect(lambda: self.plot_amplitude_map())
-        self.btnViewLiveData.clicked.connect(lambda: self.view_live_data())
+        # self.saveBtn_events.clicked.connect(lambda: self.add_as_events())
+        # self.saveBtn_nonEvents.clicked.connect(lambda: self.add_non_events())
+        # self.undoBtn.clicked.connect(lambda: self.undo())
+        # self.writeWEKABtn.clicked.connect(lambda: self.writeWEKA_data())
+        # self.readPredictedVal.clicked.connect(lambda: self.read_predicted())
+        # self.amplitudeMapping.clicked.connect(lambda: self.plot_amplitude_map())
+        # self.btnViewLiveData.clicked.connect(lambda: self.view_live_data())
+        # self.btnShowPacingEvents.clicked.connect(lambda: self.show_compute_pacing_events())
+        # self.btnShowPacingCleaned.clicked.connect(lambda: self.show_cleaned_pacing())
 
-        self.analyseInternal.clicked.connect(lambda: self.analyse_internal())
+        # self.btnFindSWEvents.clicked.connect(lambda: self.compute_slow_wave_events())
 
-        self.save_trained_data.clicked.connect(lambda: self.save_trained())
-        self.load_trained_data.clicked.connect(lambda: self.load_trained())
+        # self.save_trained_data.clicked.connect(lambda: self.save_trained())
+        # self.load_trained_data.clicked.connect(lambda: self.load_trained())
 
 
     def mouseMoved(self, evt):
@@ -432,8 +477,8 @@ class GuiWindowDocks:
         self.trainingDataPlot.add_events()
         self.curve_bottom[0].set_plot_data(self.trainingDataPlot.plotDat.flatten()[0:self.trainingDataPlot.plotLength * 36])
         self.curve_bottom[1].set_plot_data(np.repeat(self.trainingDataPlot.plotEvent.flatten()[0:self.trainingDataPlot.plotLength], 36))
-        self.w3.setXRange(0, self.trainingDataPlot.plotLength * 36, padding=0)
-        self.w3.setYRange(0, 1, padding=0)
+        # self.w3.setXRange(0, self.trainingDataPlot.plotLength * 36, padding=0)
+        # self.w3.setYRange(0, 1, padding=0)
 
 
     def add_non_events(self):
@@ -441,8 +486,8 @@ class GuiWindowDocks:
         self.trainingDataPlot.add_non_events()
         self.curve_bottom[0].set_plot_data(self.trainingDataPlot.plotDat.flatten()[0:self.trainingDataPlot.plotLength * 36])
         self.curve_bottom[1].set_plot_data(np.repeat(self.trainingDataPlot.plotEvent.flatten()[0:self.trainingDataPlot.plotLength], 36))
-        self.w3.setXRange(0, self.trainingDataPlot.plotLength * 36, padding=0)
-        self.w3.setYRange(0, 1, padding=0)
+        # self.w3.setXRange(0, self.trainingDataPlot.plotLength * 36, padding=0)
+        # self.w3.setYRange(0, 1, padding=0)
 
 
     def undo(self):
@@ -450,8 +495,8 @@ class GuiWindowDocks:
         self.trainingDataPlot.undo()
         self.curve_bottom[0].set_plot_data(self.trainingDataPlot.plotDat.flatten()[0:self.trainingDataPlot.plotLength])
         self.curve_bottom[1].set_plot_data(self.trainingDataPlot.plotEvent.flatten()[0:self.trainingDataPlot.plotLength])
-        self.w3.setXRange(0, self.trainingDataPlot.plotLength * 36, padding=0)
-        self.w3.setYRange(0, 1, padding=0)
+        # self.w3.setXRange(0, self.trainingDataPlot.plotLength * 36, padding=0)
+        # self.w3.setYRange(0, 1, padding=0)
 
 
     def read_predicted(self):
@@ -488,28 +533,53 @@ class GuiWindowDocks:
         # FeatureAnalyser requires the 1d data to be passed as array of an array
         training_features = training_analyser.writeWEKA_data([data],(1, self.trainingDataPlot.plotLength))
         if event is None:
-            output_name = cg.test_file_name
+            output_name = sp.test_file_name
         else:
-            output_name = cg.training_file_name
+            output_name = sp.training_file_name
         weka_write = WekaInterface(training_features, output_name)
         weka_write.arff_write(event)
 
 
+    def show_compute_pacing_events(self) :
+
+        self.s1pacing.clear()
+        self.s2pacing.clear()
+
+        if not (len(self.MarkersPacing)==2) :
+
+            self.statBar.showMessage("Calculating pacing events ...")
+
+            sp.dat['SigPy']['MarkersPacing'], sp.dat['SigPy']['dataPacingCleaned'] = clean_pacing(sp.dat['SigPy']['dataFilt'])
+            self.MarkersPacing = sp.dat['SigPy']['MarkersPacing']
+            print("self.MarkersPacing: ", self.MarkersPacing[0])
+            print("self.MarkersPacing: ", self.MarkersPacing[1])
 
 
-    def analyse_internal(self):
+        self.s1pacing.addPoints(x=self.MarkersPacing[1], y=self.MarkersPacing[0])
+        self.s2pacing.addPoints(x=self.MarkersPacing[1], y=self.MarkersPacing[0])        
 
-        self.s1.clear()
-        self.s2.clear()
+        self.statBar.showMessage("Finished displaying pacing markers")
+
+
+
+    def compute_slow_wave_events(self) :
+
+        self.s1sw.clear()
+        self.s2sw.clear()
+
 
         self.statBar.showMessage("Training and classifying. . .")
 
         testData = np.reshape(self.data, -1)
 
         windowSize = 36
-        overlap = 0.2
+        overlap = 0.1
+
+        indexJump = int(overlap * windowSize)
+        indexJump = 1
+
         samples = []
-        for j in range(1,len(testData)-1, int(overlap * windowSize)):
+        for j in range(1,len(testData)-1, indexJump):
             if (len(testData[j:j+windowSize]) == windowSize):
                 samples.append(testData[j:j+windowSize])
         
@@ -519,11 +589,16 @@ class GuiWindowDocks:
             sample_np[i] = np.array(x)
 
         cnnType = self.btnIsNormal.isChecked()
+        
+        if cnnType==False:
+            cnnTypeNum = 0
+        else:
+            cnnTypeNum = 1
             
         # Call classification function on test data and return the predictions
 
         swCNN = SlowWaveCNN(self.trainingDataPlot.plotDat[0:self.trainingDataPlot.plotLength, :], self.trainingDataPlot.plotEvent[0:self.trainingDataPlot.plotLength, :])
-        preds = swCNN.classify_data(sample_np, cnnType)
+        preds = swCNN.classify_data(sample_np, cnnTypeNum)
 
         
         # Plot the prediction outputs 
@@ -532,7 +607,7 @@ class GuiWindowDocks:
         count = 0
         swLocs = np.where(preds==1)[0]
 
-        print("Number sw raw predictions: ", len(swLocs))
+        print("Number sw raw predictions: ", swLocs[0].shape)
         print("Number of preds: ", len(preds))
         print("Testdata.shape ", testData.shape)
 
@@ -541,7 +616,7 @@ class GuiWindowDocks:
         winRangeMultiplier = 2 * windowSize
 
         # for every x segment of data. if there are SW predictions within this segment, mark as sw.
-        for j in range(0, len(testData), int(overlap * windowSize)):
+        for j in range(0, len(testData), indexJump):
 
             count += 1
 
@@ -550,7 +625,6 @@ class GuiWindowDocks:
                 maxIndex = np.argmax(np.absolute(baselinedDat - baselinedDat.mean(axis=0)))
                 prediction[j+maxIndex] = 1
                 winRange = j + winRangeMultiplier #skip next 2 windows
-
 
         print("prediction.shape: ", prediction.shape)
 
@@ -606,8 +680,9 @@ class GuiWindowDocks:
             print("No events detected")
             return
 
-        self.s1.addPoints(x=pos_np[1], y=(pos_np[0]+0.75))
-        self.s2.addPoints(x=pos_np[1], y=(pos_np[0]+0.75))
+
+        self.s1sw.addPoints(x=pos_np[1], y=(pos_np[0]+0.75))
+        self.s2sw.addPoints(x=pos_np[1], y=(pos_np[0]+0.75))
 
         # Convert event co-ordinates to indices for  2d TOA to output to GEMS
         self.statBar.showMessage("Finished classifying slow wave events.", 1000)
@@ -616,11 +691,47 @@ class GuiWindowDocks:
 
 
 
+    def show_cleaned_pacing(self) :
+
+
+
+        if not (len(self.MarkersPacing)==2) :
+
+            self.statBar.showMessage("Cleaning pacing ...")
+
+            sp.dat['SigPy']['MarkersPacing'], sp.dat['SigPy']['dataPacingCleaned'] = clean_pacing(sp.dat['SigPy']['dataFilt'])
+            self.MarkersPacing = sp.dat['SigPy']['MarkersPacing']
+            print("self.MarkersPacing: ", self.MarkersPacing[0])
+            print("self.MarkersPacing: ", self.MarkersPacing[1])
+
+            self.s1pacing.clear()
+            self.s2pacing.clear()
+
+            self.s1pacing.addPoints(x=self.MarkersPacing[1], y=self.MarkersPacing[0])
+            self.s2pacing.addPoints(x=self.MarkersPacing[1], y=self.MarkersPacing[0])                
+
+        print("sp.dat['SigPy']['dataToPlot'].shape : ", sp.dat['SigPy']['dataToPlot'].shape)
+        sp.dat['SigPy']['dataToPlot'] = preprocess(sp.dat['SigPy']['dataPacingCleaned'])
+
+        print("sp.dat['SigPy']['dataToPlot'].shape : ", sp.dat['SigPy']['dataToPlot'].shape)
+
+        self.data = sp.dat['SigPy']['dataToPlot']
+        self.nChans = sp.dat['SigPy']['dataToPlot'].shape[0]
+        self.nSamples = sp.dat['SigPy']['dataToPlot'].shape[1]
+
+        self.repaint_plots()
+
+        self.set_plot_data(sp.dat['SigPy']['dataToPlot'], self.nChans, self.nSamples)
+
+        self.statBar.showMessage("Finished plotting cleaned data")
+
+
+
     def btn_animation_set_play(self):
 
         print("Setting play button")
 
-        btnPlayIconPath = cg.graphicsPath + "btnPlayTiny.png"
+        btnPlayIconPath = sp.graphicsPath + "btnPlayTiny.png"
 
         self.btnPlayPause.setIcon(QtGui.QIcon(btnPlayIconPath))
         try:
@@ -639,7 +750,7 @@ class GuiWindowDocks:
         self.btnPlayPause.setFixedHeight(20)
         self.btnPlayPause.setFixedWidth(20)
 
-        btnPauseIconPath = cg.graphicsPath + "btnPauseTiny.png"
+        btnPauseIconPath = sp.graphicsPath + "btnPauseTiny.png"
 
         self.btnPlayPause.setIcon(QtGui.QIcon(btnPauseIconPath))
         self.btnPlayPause.setIconSize(QtCore.QSize(20,20))
@@ -671,14 +782,14 @@ class GuiWindowDocks:
 
     def change_animation_data_to_chans(self) :
 
-        self.ampMap.gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
+        self.ampMap.gridDataToAnimate = sp.dat['SigPy']['gridChannelData']
         self.change_animation_data()
 
 
 
     def change_animation_data_to_events(self) :
 
-        self.ampMap.gridDataToAnimate = cg.dat['SigPy']['gridEventData']
+        self.ampMap.gridDataToAnimate = sp.dat['SigPy']['gridEventData']
         self.change_animation_data()
 
 
@@ -715,16 +826,16 @@ class GuiWindowDocks:
 
         # Preload data
 
-        cg.dat['SigPy']['gridChannelData'] = map_channel_data_to_grid()
+        sp.dat['SigPy']['gridChannelData'] = map_channel_data_to_grid()
 
 
 
-        if 'toaIndx' not in cg.dat['SigPy'] :
-            self.statBar.showMessage("Note! To plot CNN SW event data, please first run analyse events.")
+        if 'toaIndx' not in sp.dat['SigPy'] :
+            self.statBar.showMessage("Note! To plot CNN SW event data, please first run Find Slow-Wave Events.")
         else:
-            cg.dat['SigPy']['gridEventData'] = map_event_data_to_grid_with_trailing_edge()
+            sp.dat['SigPy']['gridEventData'] = map_event_data_to_grid_with_trailing_edge()
 
-        gridDataToAnimate = cg.dat['SigPy']['gridChannelData']
+        gridDataToAnimate = sp.dat['SigPy']['gridChannelData']
 
 
         self.ampMap.setImage(gridDataToAnimate)
@@ -733,10 +844,10 @@ class GuiWindowDocks:
         ## ======= TOP NAV ===========
         ## -- Play pause speed controls
         # Set default animation speed to sampling frequency fps
-        self.ampMap.singleStepVal = round((cg.dat['SigPy']['sampleRate'] / 2), 1)
+        self.ampMap.singleStepVal = round((sp.dat['SigPy']['sampleRate'] / 2), 1)
 
-        self.ampMap.currentFrameRate = cg.dat['SigPy']['sampleRate']
-        self.ampMap.realFrameRate = cg.dat['SigPy']['sampleRate']
+        self.ampMap.currentFrameRate = sp.dat['SigPy']['sampleRate']
+        self.ampMap.realFrameRate = sp.dat['SigPy']['sampleRate']
         self.ampMap.currentFrameRate = self.ampMap.realFrameRate * 2 # Start at double speed
 
         # Create play pause speed controls
@@ -866,9 +977,7 @@ class GuiWindowDocks:
                 time.sleep(sleepTime)
 
         print(frame," frames displayed.")
-
-
-
+        
 
 
     # Thread to keep pulling in live data 
@@ -965,16 +1074,16 @@ class GuiWindowDocks:
 
 
     def save_trained(self):
-        with open(cg.trained_file, 'wb') as output:
+        with open(sp.trained_file, 'wb') as output:
             pickle.dump(self.trainingDataPlot, output, pickle.HIGHEST_PROTOCOL)
 
 
     def load_trained(self):
-        self.trainingDataPlot = np.load(cg.get_trained_file())
+        self.trainingDataPlot = np.load(sp.get_trained_file())
         self.curve_bottom[0].set_plot_data(self.trainingDataPlot.plotDat.flatten()[0:self.trainingDataPlot.plotLength])
         self.curve_bottom[1].set_plot_data(self.trainingDataPlot.plotEvent.flatten()[0:self.trainingDataPlot.plotLength])
-        self.w3.setXRange(0, self.trainingDataPlot.plotLength, padding=0)
-        self.w3.setYRange(-10, 10, padding=0)
+        # self.w3.setXRange(0, self.trainingDataPlot.plotLength, padding=0)
+        # self.w3.setYRange(-10, 10, padding=0)
 
 
 
@@ -983,27 +1092,27 @@ class GuiWindowDocks:
 
     def load_file_selector__gui_set_data(self):
         # filenames = QtGui.QFileDialog.getOpenFileNames(self.loadAction, "Select File", "", "*.txt")
-        cg.datFileName = QtGui.QFileDialog.getOpenFileName(None, "Select File", "", "*.mat")
+        sp.datFileName = QtGui.QFileDialog.getOpenFileName(None, "Select File", "", "*.mat")
 
         if not (sys.platform == "linux2") :
-            cg.datFileName = cg.datFileName[0]
+            sp.datFileName = sp.datFileName[0]
 
         self.statBar.showMessage("Loading . . . ", 1000)
-        print("cg.datFileName: ", cg.datFileName)        
-        load_GEMS_mat_into_SigPy(cg.datFileName)
+        print("sp.datFileName: ", sp.datFileName)        
+        load_GEMS_mat_into_SigPy(sp.datFileName)
 
         self.statBar.showMessage("Finished loading! Now preprocessing . . .")
 
-        cg.dat['SigPy']['normData'] = preprocess(cg.dat['SigPy']['filtData'])
+        sp.dat['SigPy']['dataNorm'] = preprocess(sp.dat['SigPy']['dataFilt'])
         self.statBar.showMessage("Finished pre-processing! Now repainting plots . . . ")
 
-        # print("cg.dat['SigPy']['normData']: ", cg.dat['SigPy']['normData'])
+        # print("sp.dat['SigPy']['dataNorm']: ", sp.dat['SigPy']['dataNorm'])
         # self.trainingDataPlot = TrainingDataPlot()
 
 
         self.repaint_plots()
         # Set plot data
-        self.set_plot_data(cg.dat['SigPy']['normData'], cg.dat['SigPy']['normData'].shape[0], cg.dat['SigPy']['normData'].shape[1])
+        self.set_plot_data(sp.dat['SigPy']['dataNorm'], sp.dat['SigPy']['dataNorm'].shape[0], sp.dat['SigPy']['dataNorm'].shape[1])
         self.btnIsNormal.setChecked(1)
 
         self.statBar.showMessage("Finished repainting plots!", 2000)
@@ -1012,14 +1121,14 @@ class GuiWindowDocks:
 
     def save_as_file_selector(self):
 
-        cg.datFileName = QtGui.QFileDialog.getSaveFileName(None, "Save As File", cg.datFileName, "*.mat")
+        sp.datFileName = QtGui.QFileDialog.getSaveFileName(None, "Save As File", sp.datFileName, "*.mat")
 
         if not (sys.platform == "linux2") :
-            cg.datFileName = cg.datFileName[0]        
+            sp.datFileName = sp.datFileName[0]        
         self.statBar.showMessage("Saving . . . ")
-        print("cg.datFileName: ", cg.datFileName) 
+        print("sp.datFileName: ", sp.datFileName) 
 
-        save_GEMS_SigPy_file(cg.datFileName)
+        save_GEMS_SigPy_file(sp.datFileName)
 
         self.statBar.showMessage("Saved file!")
       
@@ -1027,7 +1136,7 @@ class GuiWindowDocks:
 
     def save_file_selector(self):
         self.statBar.showMessage("Saving . . . ")
-        save_GEMS_SigPy_file(cg.datFileName)
+        save_GEMS_SigPy_file(sp.datFileName)
 
         self.statBar.showMessage("Saved file!")
 

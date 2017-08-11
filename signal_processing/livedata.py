@@ -6,7 +6,7 @@ from __future__ import division # Correct Python 2 division
 
 import numpy as np
 
-import config_global as cg
+import config_global as sp
 
 
 from threading import Thread
@@ -27,9 +27,9 @@ class LiveData(Thread):
 			self.maxIndex = 999999999999
 
 		else:
-			self.dataSource = cg.dat['SigPy']['filtData'] 			
-			self.dSourceSampleRate = 1 / cg.dat['SigPy']['timeBetweenSamples']
-			self.timeBetweenSamples = cg.dat['SigPy']['timeBetweenSamples']
+			self.dataSource = sp.dat['SigPy']['dataFilt'] 			
+			self.dSourceSampleRate = 1 / sp.dat['SigPy']['timeBetweenSamples']
+			self.timeBetweenSamples = sp.dat['SigPy']['timeBetweenSamples']
 			self.maxIndex = self.dataSource.shape[1]
 			self.bufferedChunk = self.dataSource[:,0]
 

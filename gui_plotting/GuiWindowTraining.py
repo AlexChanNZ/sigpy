@@ -21,7 +21,7 @@ class GuiWindowTraining:
         self.setRectRegionROI()
         self.curves_left = []
         self.curves_right = []
-        self.p2.sigXRangeChanged.connect(selstr(cg.loaded_data_file) 
+        self.p2.sigXRangeChanged.connect(selstr(sp.loaded_data_file) 
                     + str('_acti_points.matf.updateRegion)
         self.p2.sigYRangeChanged.connect(self.updateRegion)
         self.proxy = pg.SignalProxy(self.p2.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)

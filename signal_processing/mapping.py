@@ -1,4 +1,4 @@
-import config_global as cg
+import config_global as sp
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 from sklearn import preprocessing
@@ -6,13 +6,14 @@ from sklearn import preprocessing
 
 
 def get_grid() :
-	grid = cg.dat['SigPy']['gridMap']
+	grid = sp.dat['SigPy']['gridMap']
 	return grid
+
 
 
 def map_channel_data_to_grid(inData=None) :
 	if inData is None:
-		inData = cg.dat['SigPy']['normData']
+		inData = sp.dat['SigPy']['dataNorm']
 
 	grid = get_grid()
 
@@ -27,24 +28,26 @@ def map_channel_data_to_grid(inData=None) :
 	return gridData
 
 
+
 def map_event_data_to_grid(inData=None) :
 	if not inData:
-		inData = cg.dat['SigPy']['toaIndx']
+		inData = sp.dat['SigPy']['toaIndx']
 
 	grid = get_grid()
 
-	eventGrid = np.zeros(shape=(cg.dat['SigPy']['normData'].shape[1], grid.shape[0], grid.shape[1]), dtype=float)
+	eventGrid = np.zeros(shape=(sp.dat['SigPy']['dataNorm'].shape[1], grid.shape[0], grid.shape[1]), dtype=float)
 
 	for r in range(0, grid.shape[0]) :
 		for c in range(0, grid.shape[1]) :
 			chanNum = int(grid[r,c])
-			if (chanNum <= cg.dat['SigPy']['normData'].shape[0]) :
+			if (chanNum <= sp.dat['SigPy']['dataNorm'].shape[0]) :
 				eventIndicesForChan = inData[(chanNum-1)].astype(int)
 				if eventIndicesForChan.shape[0] > 0 :
 
 					eventGrid[eventIndicesForChan,r,c] = 1		
 
 	return eventGrid
+
 
 
 def map_event_data_to_grid_with_trailing_edge() :
