@@ -10,7 +10,7 @@ import scipy.io as sio
 import config_global as sp
 
 def warn(*args, **kwargs):
-    pass
+	pass
 import warnings
 warnings.warn = warn
 
@@ -48,10 +48,10 @@ def norm_second_clip(secData, clipLims) :
 
 def get_deviation_from_median(inData):
 
-    lowerLimit = np.median(inData) - 4 * np.std(inData);
-    upperLimit = np.median(inData) + 4 * np.std(inData);
+	lowerLimit = np.median(inData) - 4 * np.std(inData);
+	upperLimit = np.median(inData) + 4 * np.std(inData);
 
-    return (lowerLimit, upperLimit)
+	return (lowerLimit, upperLimit)
 
 
 
@@ -111,26 +111,26 @@ def find_pacing_threshold(inData) :
 
 	print(extremeChanValues)
 
- 	# whiskerEdges = (np.mean(extremeChanValues) - np.std(extremeChanValues), np.mean(extremeChanValues) + np.std(extremeChanValues))
+	# whiskerEdges = (np.mean(extremeChanValues) - np.std(extremeChanValues), np.mean(extremeChanValues) + np.std(extremeChanValues))
 
- 	whiskerEdges = np.percentile(extremeChanValues, [percentileNum, 100-percentileNum])
+	whiskerEdges = np.percentile(extremeChanValues, [percentileNum, 100-percentileNum])
 
- 	if (extremeVal < 0) : 
- 		quartile = np.min(whiskerEdges)
- 		outliers = extremeChanValues[np.where(extremeChanValues < quartile)]
+	if (extremeVal < 0) : 
+		quartile = np.min(whiskerEdges)
+		outliers = extremeChanValues[np.where(extremeChanValues < quartile)]
 
 	else:
 		quartile = np.max(whiskerEdges)
- 		outliers = extremeChanValues[np.where(extremeChanValues > quartile)]
+		outliers = extremeChanValues[np.where(extremeChanValues > quartile)]
 
- 	thresholdVal = np.mean(outliers)
+	thresholdVal = np.mean(outliers)
 
- 	print("WhiskerEdges: ", whiskerEdges)
- 	print("Extreme val: ", extremeVal)
- 	print("Quartile: ", quartile)
- 	print("ThresholdVal: ", thresholdVal)
+	print("WhiskerEdges: ", whiskerEdges)
+	print("Extreme val: ", extremeVal)
+	print("Quartile: ", quartile)
+	print("ThresholdVal: ", thresholdVal)
 
- 	return extremeChanValues, thresholdVal
+	return extremeChanValues, thresholdVal
 
 
 

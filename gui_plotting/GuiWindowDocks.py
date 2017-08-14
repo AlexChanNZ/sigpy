@@ -40,7 +40,7 @@ from nolearn.lasagne import NeuralNet
 from nolearn.lasagne import visualize
 
 # Locally-developed modules
-from TrainingDataPlot import TrainingDataPlot
+from gui_plotting.TrainingDataPlot import TrainingDataPlot
 from file_io.ARFFcsvReader import ARFFcsvReader
 from ml_classes.WekaInterface import WekaInterface
 from ml_classes.FeatureAnalyser import FeatureAnalyser
@@ -396,7 +396,7 @@ class GuiWindowDocks:
         tickRange = range(0, data.shape[1], tickInterval)
 
         # Convert indices to time for ticks -- multiply indices by time between samples and add original starting time.
-        tickLabels = [str(round(i*sp.dat['SigPy']['timeBetweenSamples']+sp.dat['SigPy']['timeStart'],2)) for i in tickRange]
+        tickLabels = [str(np.round(i*sp.dat['SigPy']['timeBetweenSamples']+sp.dat['SigPy']['timeStart'],2)[0]) for i in tickRange]
 
         print(tickLabels)
 
@@ -690,7 +690,7 @@ class GuiWindowDocks:
         self.btnPlayPause.setIcon(QtGui.QIcon(btnPlayIconPath))
         try:
             self.btnPlayPause.clicked.disconnect()
-        except Exception, e:
+        except Exception as e:
             print(e)
 
         self.btnPlayPause.clicked.connect(self.play_animation)            
@@ -711,7 +711,7 @@ class GuiWindowDocks:
 
         try:
             self.btnPlayPause.clicked.disconnect()
-        except Exception, e:
+        except Exception as e:
             print(e)
 
         self.btnPlayPause.clicked.connect(self.pause_animation)
@@ -920,7 +920,7 @@ class GuiWindowDocks:
                 self.liveMapImageItem.setImage(self.mappedPreprocessedData[frame,:,:])
                 self.lockDisplayThread.release() 
 
-            except Exception, e:
+            except Exception as e:
                 print(e)
 
             nextFrameTime = timeStartDisplayingFrames + frame * timeBetweenSamplesAdjust

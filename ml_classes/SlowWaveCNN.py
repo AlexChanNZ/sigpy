@@ -4,13 +4,12 @@ Author : Shameer Sathar
 """
 import sys, os # to browse directories
 
-import cPickle as pickle
-# import six.moves.cPickle as pickle
+# import cPickle as pickle
+import six.moves.cPickle as pickle
 
 import numpy as np
 import scipy.io as sio
 import theano
-
 
 
 # from theano.tensor.signal import downsample 
@@ -88,7 +87,7 @@ class SlowWaveCNN:
 
                         X_train = trainingSamples[0:2000,:]
                         Y_train = trainingLabels[0:2000,:]        
-                except Exception,e:
+                except Exception as e:
                     print("Exception: ", e)      
                     print("Caused by file: ", trainingFile)      
 

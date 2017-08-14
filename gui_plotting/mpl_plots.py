@@ -141,7 +141,7 @@ def plot_swImage_grid(swData, swLabels, linePlot=False, iTitle=""):
 
             swImages[rowStart : (rowStart + (pixelsPerRow-gap)), colStart : (colStart + (pixelsPerCol-gap))] = swImage
 
-        except Exception, e:
+        except Exception as e:
             print(e)            
             print(swData[swI,0,:,:])
 
