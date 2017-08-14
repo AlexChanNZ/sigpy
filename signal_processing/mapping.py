@@ -10,10 +10,13 @@ def get_grid() :
 	return grid
 
 
+def get_mapped_chan(chanNum):
+	return np.where(np.array(sp.dat['SigPy']['chanNums'])==(chanNum-1))[0]
+
 
 def map_channel_data_to_grid(inData=None) :
 	if inData is None:
-		inData = sp.dat['SigPy']['dataNorm']
+		inData = sp.dat['SigPy']['dataToPlot']		
 
 	grid = get_grid()
 
@@ -21,9 +24,11 @@ def map_channel_data_to_grid(inData=None) :
 
 	for r in range(0, grid.shape[0]) :
 		for c in range(0, grid.shape[1]) :
-			chanNum = int(grid[r,c])
-			if (chanNum <= inData.shape[0]) :
-				gridData[:,r,c] = inData[(chanNum-1),:]
+			chanNum = grid[r,c]
+			mappedChan = get_mapped_chan(chanNum)
+			# print("mappedChan: ", mappedChan)
+			if (mappedChan <= inData.shape[0]) :		
+				gridData[:,r,c] = inData[mappedChan,:]
 
 	return gridData
 
@@ -35,15 +40,19 @@ def map_event_data_to_grid(inData=None) :
 
 	grid = get_grid()
 
-	eventGrid = np.zeros(shape=(sp.dat['SigPy']['dataNorm'].shape[1], grid.shape[0], grid.shape[1]), dtype=float)
+	eventGrid = np.zeros(shape=(sp.dat['SigPy']['dataToPlot'].shape[1], grid.shape[0], grid.shape[1]), dtype=float)
 
 	for r in range(0, grid.shape[0]) :
 		for c in range(0, grid.shape[1]) :
-			chanNum = int(grid[r,c])
-			if (chanNum <= sp.dat['SigPy']['dataNorm'].shape[0]) :
-				eventIndicesForChan = inData[(chanNum-1)].astype(int)
-				if eventIndicesForChan.shape[0] > 0 :
+			chanNum = grid[r,c]
 
+			mappedChan = get_mapped_chan(chanNum)
+
+			if (mappedChan <= sp.dat['SigPy']['dataToPlot'].shape[0]) :
+
+				eventIndicesForChan = inData[mappedChan][0].astype(int)
+
+				if eventIndicesForChan.shape[0] > 0 :
 					eventGrid[eventIndicesForChan,r,c] = 1		
 
 	return eventGrid

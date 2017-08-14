@@ -15,7 +15,7 @@ from signal_processing.preprocessing import *
 
 
 
-def load_GEMS_mat_into_SigPy(fileNameAndPath):
+def load_GEMS_mat_into_SigPy(fileNameAndPath, isNormal):
     """
     The data is classified based on the training data.
     :param plot: Input values to be processed for generating features
@@ -33,16 +33,24 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath):
         #Duplicate original gems file and create SigPy structure
         sp.dat['GEMSorig_toapp'] = sp.dat['toapp'][0,0]
 
+
     sp.dat['SigPy'] = {}
     sp.dat['SigPy']['dataFilt'] = sp.dat['toapp']['filtdata'][0,0]
 
-    sp.dat['SigPy']['dataNorm'] = preprocess(sp.dat['SigPy']['dataFilt'])
-    sp.dat['SigPy']['dataToPlot'] = sp.dat['SigPy']['dataNorm']
+    sp.dat['SigPy']['dataToPlot'] =  preprocess(sp.dat['SigPy']['dataFilt'])
 
-    if 'PACING' in fileNameAndPath.upper() :
+    if isNormal :
+
         sp.dat['SigPy']['dataIsNormal'] = 0
+        sp.dat['SigPy']['MarkersPacing'], sp.dat['SigPy']['dataPacingCleaned'] = clean_pacing(sp.dat['SigPy']['dataFilt'])
+
+        sp.dat['SigPy']['dataForMarking'] = preprocess(sp.dat['SigPy']['dataPacingCleaned'])
+
     else:
+
         sp.dat['SigPy']['dataIsNormal'] = 1
+        sp.dat['SigPy']['dataForMarking'] = sp.dat['SigPy']['dataToPlot']
+
 
     sp.dat['SigPy']['bdfdef'] = sp.dat['bdfdef'][0,0]    
     sp.dat['SigPy']['sampleRate'] = sp.dat['toapp']['fs'][0,0]
@@ -53,7 +61,9 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath):
     sp.dat['toapp']['showchans'][0,0] = np.array(sp.dat['toapp']['showchans'][0,0]).astype(dtype=float)
     sp.dat['toapp']['orientedElec'][0,0] = np.array(sp.dat['toapp']['orientedElec'][0,0]).astype(dtype=float)
 
-    sp.dat['SigPy']['gridMap'] = sp.dat['toapp']['orientedElec'][0,0]
+    sp.dat['SigPy']['gridMap'] = sp.dat['toapp']['orientedElec'][0,0].astype(int)
+    sp.dat['SigPy']['chanNums'] = sp.dat['toapp']['showchans'][0,0][0].astype(int)
+
 
     # sp.dat = sio.loadmat(fileNameAndPath, mat_dtype=False) 
 
@@ -96,8 +106,6 @@ def update_GEMS_data_with_TOAs(pos_np, nChans) :
         toaCell[chanI] = np.array([])
 
     print("making TOA data for GEMS")
-
-
 
     ## Iterate through indices and chans and convert to ToA and GEMS compatible indexes
     for sampleIndex, sampleChan in zip(pos_np[1], pos_np[0]) :

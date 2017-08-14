@@ -39,14 +39,15 @@ Gastric data
 defaultDataFile = "pig83_exp7_A_H_serosal_pacing_Elec_ATmarks_000_SigPy_input.mat"
 defaultDataFile = "pig83_exp7_A_H_serosal_pacing_000.mat"
 defaultDataFile = "pig83_exp7_A_H_serosal_pacing_Elec_000_200plus400s.mat"
+dataFileIsNormal = False
 
 
 dataFileAndRoot = sp.userDataStore + defaultDataFile
 
 if not os.path.isfile(dataFileAndRoot) :
-    defaultDataFile = 'sample_GEMS_file.mat'
+    defaultDataFile = 'sample_GEMS_normal.mat'
     dataFileAndRoot = sp.dataRoot + defaultDataFile
-
+    dataFileIsNormal = True
 
 
 
@@ -62,12 +63,10 @@ Intestine data
 # mat_contents = sio.loadmat(dataFileAndRoot)
 # print(mat_contents)
 
-load_GEMS_mat_into_SigPy(dataFileAndRoot)
+load_GEMS_mat_into_SigPy(dataFileAndRoot, dataFileIsNormal)
 
 sp.set_data_file_name((dataFileAndRoot.rsplit('/', 1)[1]))
-sp.set_test_file_name(str(sp.loaded_data_file) + str('_test.arff'))
-sp.set_training_file_name(str(sp.loaded_data_file) + str('_training.arff'))
-sp.set_trained_file(str(sp.loaded_data_file) + str('_trained.dat'))
+
 
 #vals = np.array(mat_contents['mark_cardiac'])
 
@@ -75,7 +74,7 @@ sp.set_trained_file(str(sp.loaded_data_file) + str('_trained.dat'))
 if __name__ == '__main__' :
 
     # Run GUI
-    gui = GuiWindowDocks()
+    gui = GuiWindowDocks(dataFileIsNormal)
 
     """
     Create data here and add to the curve

@@ -47,9 +47,8 @@ class PyQtLinePlots:
 
         self.win.setCentralWidget(self.area)
         self.win.resize(1500, 800)
-        self.win.setWindowTitle('SigPy Training')
+        self.win.setWindowTitle('SigPy')
 
-         
 
         self.curves_left = []
         self.curves_right = []
