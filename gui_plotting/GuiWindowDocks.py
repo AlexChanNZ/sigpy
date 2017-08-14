@@ -22,10 +22,6 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 from pyqtgraph.dockarea import *
 
-
-from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget, RawImageWidget
-
-
 # import cPickle as pickle # Python3 
 import pickle
 import matplotlib as mpl  
@@ -546,11 +542,7 @@ class GuiWindowDocks:
         for j in range(1,len(testData)-1, indexJump):
             if (len(testData[j:j+windowSize]) == windowSize):
                 samples.append(testData[j:j+windowSize])
-        
-        sample_np = np.empty((len(samples), windowSize))
-
-        for i, x in enumerate(samples):
-            sample_np[i] = np.array(x)
+        sample_np = np.array(samples)
 
         cnnType = self.isNormal
 
@@ -573,7 +565,7 @@ class GuiWindowDocks:
         count = 0
         swLocs = np.where(preds==1)[0]
 
-        print("Number sw raw predictions: ", swLocs[0].shape)
+        print("Number sw raw predictions: ", swLocs.shape)
         print("Number of preds: ", len(preds))
         print("Testdata.shape ", testData.shape)
 
@@ -586,12 +578,10 @@ class GuiWindowDocks:
         for j in range(0, len(testData), indexJump):
 
             count += 1
-
-            if (len(np.where(swLocs == count)[0]) > 0 and (j > winRange)) :
-                baselinedDat = testData[j : j+(winRangeMultiplier)]
-                maxIndex = np.argmax(np.absolute(baselinedDat - baselinedDat.mean(axis=0)))
+            if (len(np.where(swLocs == count)[0]) > 0):# and (j > winRange)) :
+                maxIndex = np.argmax( np.absolute(np.diff(testData[j:j + winRangeMultiplier])))
                 prediction[j+maxIndex] = 1
-                winRange = j + winRangeMultiplier #skip next 2 windows
+                j += winRangeMultiplier
 
         print("prediction.shape: ", prediction.shape)
 
@@ -640,7 +630,7 @@ class GuiWindowDocks:
         pos_np = np.asarray(pos).transpose()
 
         print("self.data.shape: ", self.data.shape)
-        print("pos_np[1].size: ", pos_np[1].size)
+        print("pos_np[1].size: ", pos_np.size)
 
 
         if pos_np.size is 0:

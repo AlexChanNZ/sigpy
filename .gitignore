@@ -108,6 +108,9 @@ ENV/
 .mat_test.arff
 .mat_training.arff
 
+# CNN network files
+.cnn
+
 # mkdocs documentation
 /site
 
