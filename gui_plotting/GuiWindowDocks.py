@@ -396,7 +396,7 @@ class GuiWindowDocks:
         tickRange = range(0, data.shape[1], tickInterval)
 
         # Convert indices to time for ticks -- multiply indices by time between samples and add original starting time.
-        tickLabels = [str(np.round(i*sp.dat['SigPy']['timeBetweenSamples']+sp.dat['SigPy']['timeStart'],2)[0]) for i in tickRange]
+        tickLabels = [str((i*sp.dat['SigPy']['timeBetweenSamples']+sp.dat['SigPy']['timeStart']).astype(int)[0][0]) for i in tickRange]
 
         print(tickLabels)
 

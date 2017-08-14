@@ -116,7 +116,7 @@ class SlowWaveCNN:
                 return
 
         nnFileNameAndPath = sp.nnPath + nnFileName            
-
+        print("nnFileNameAndPath: ", nnFileNameAndPath)
         #Load CNN instead of training
         try:
             f = open(nnFileNameAndPath, 'rb')
