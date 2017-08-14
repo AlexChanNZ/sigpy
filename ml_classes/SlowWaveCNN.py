@@ -54,7 +54,9 @@ class SlowWaveCNN:
         test_array = np.asarray(test_data)
         test_array = test_array.reshape((-1, 1, 6, 6))
         print(test_array.shape)
+        sp.gui.statBar.showMessage("Classifying...")
         prediction = self.neural_net.predict(test_array)
+        sp.gui.statBar.showMessage("Finished classifying.")
 
         return prediction
         
@@ -125,8 +127,9 @@ class SlowWaveCNN:
             return
 
         except Exception as e:
+            sp.gui.statBar.showMessage("Training neural net ..")
 
-            print("Training neural net")
+            print("Training neural net ...")
                 
             if (type_data_set is 1):
                 X_train, Y_train = self.load_training_dataset("normal")
@@ -191,12 +194,10 @@ class SlowWaveCNN:
                         )
 
             # Train the network
-            print("X_train.shape: ", X_train.shape)
-            print("Y_train.shape: ", Y_train.shape)
-            print("X_train[1,:,:,:]", X_train[1,:,:,:])
-
             Y_train = Y_train.astype(np.int32)
             self.neural_net = nn.fit(X_train, Y_train.flatten())
+            print("Finished training the network")
+            sp.gui.statBar.showMessage("Finished training the network.")
 
             pickle.dump(self.neural_net, open(nnFileNameAndPath, "wb"))
 

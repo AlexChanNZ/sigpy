@@ -22,6 +22,7 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath, isNormal):
     :return: predictions for the entire data set
     """
 
+    print("load_GEMS_mat_into_SigPy")
     sp.dat = sio.loadmat(fileNameAndPath, matlab_compatible=True) #added matlab_compatible=True to aid GEMS compatibility
     # Check if this file has been saved from SigPy and whether it has been copied
     if hasattr(sp.dat, 'GEMSorig_toapp'):
@@ -37,12 +38,18 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath, isNormal):
     sp.dat['SigPy'] = {}
     sp.dat['SigPy']['dataFilt'] = sp.dat['toapp']['filtdata'][0,0]
 
+    print("Normalising plotting data ...")
+
     sp.dat['SigPy']['dataToPlot'] =  preprocess(sp.dat['SigPy']['dataFilt'])
 
-    if isNormal :
+    if not isNormal :
 
         sp.dat['SigPy']['dataIsNormal'] = 0
+        print("Cleaning pacing data")
+
         sp.dat['SigPy']['MarkersPacing'], sp.dat['SigPy']['dataPacingCleaned'] = clean_pacing(sp.dat['SigPy']['dataFilt'])
+
+        print("Normalising cleaning pacing data for marking ...")
 
         sp.dat['SigPy']['dataForMarking'] = preprocess(sp.dat['SigPy']['dataPacingCleaned'])
 
@@ -88,6 +95,8 @@ def save_GEMS_SigPy_file(fileNameAndPath):
 
 
 def update_GEMS_data_with_TOAs(pos_np, nChans) :
+    print("Updating GEMS data with TOAs ...")
+    # sp.gui.statBar.showMessage("Updating GEMS data with TOAs ...")
 
     toaChanIndices = []
     toaChanTimeStamps = []
@@ -105,15 +114,11 @@ def update_GEMS_data_with_TOAs(pos_np, nChans) :
         toaIndx[chanI] = np.array([])
         toaCell[chanI] = np.array([])
 
-    print("making TOA data for GEMS")
 
     ## Iterate through indices and chans and convert to ToA and GEMS compatible indexes
     for sampleIndex, sampleChan in zip(pos_np[1], pos_np[0]) :
         
         if not (int(sampleChan) == int(lastSampleChan)) and (lastSampleChan > -1):  
-
-            print("toaChanIndices: ", toaChanIndices)        
-            print("toaChanTimeStamps: ", toaChanTimeStamps)   
 
             if (len(toaChanIndices) > 0) :
 
@@ -132,10 +137,6 @@ def update_GEMS_data_with_TOAs(pos_np, nChans) :
             
         lastSampleChan = sampleChan
 
-
-
-    print("toaIndx: ", toaIndx)        
-    print("toaCell: ", toaCell)  
 
     sp.dat['SigPy']['toaIndx'] = toaIndx
     sp.dat['SigPy']['toaCell'] = toaCell

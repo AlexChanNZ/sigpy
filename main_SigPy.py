@@ -74,7 +74,7 @@ sp.set_data_file_name((dataFileAndRoot.rsplit('/', 1)[1]))
 if __name__ == '__main__' :
 
     # Run GUI
-    gui = GuiWindowDocks(dataFileIsNormal)
+    sp.gui = GuiWindowDocks(dataFileIsNormal)
 
     """
     Create data here and add to the curve

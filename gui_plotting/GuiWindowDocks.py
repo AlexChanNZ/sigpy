@@ -41,7 +41,6 @@ from nolearn.lasagne import visualize
 
 # Locally-developed modules
 from gui_plotting.TrainingDataPlot import TrainingDataPlot
-from file_io.ARFFcsvReader import ARFFcsvReader
 from ml_classes.WekaInterface import WekaInterface
 from ml_classes.FeatureAnalyser import FeatureAnalyser
 from ml_classes.SlowWaveCNN import SlowWaveCNN
@@ -107,7 +106,7 @@ class GuiWindowDocks:
 
         self.amplitudeMapping.clicked.connect(lambda: self.plot_amplitude_map())        
 
-        self.btnFindSWEvents.clicked.connect(lambda: self.compute_slow_wave_events())
+        self.btnFindSWEvents.clicked.connect(lambda: self.detect_slow_wave_events())
         # self.btnShowPacingEvents.clicked.connect(lambda: self.show_pacing_events())
         # self.btnShowPacingCleaned.clicked.connect(lambda: self.show_cleaned_pacing())
 
@@ -141,6 +140,7 @@ class GuiWindowDocks:
             self.MarkersPacing = []
 
 
+
         if "SWMarkers" in sp.dat['SigPy'].keys() :
             self.markersSWs = sp.dat['SigPy']['MarkersSW']
             print("SWMarkers key found!")
@@ -149,22 +149,18 @@ class GuiWindowDocks:
             self.markersSWs = [] 
 
        
+
     def set_dataType_text(self):
         if self.isNormal:
             self.dataTypeLabel.setText("Normal Data Selected")
         else :
             self.dataTypeLabel.setText("Pacing Data Selected")
-        # if self.isNormal == 1 :
-        #     self.change_physiology_to_normal()
 
-        # else :
-        #     self.change_physiology_to_pacing()
 
 
     def add_one(self):
         self.rowNum+=1
         return self.rowNum
-
 
 
     def add_menu_bar(self):
@@ -233,28 +229,8 @@ class GuiWindowDocks:
 
         w1.addWidget(self.dataTypeLabel, row=self.add_one(), col=0)
 
-        # self.btnPacing = QtGui.QRadioButton('Pacing')
-        # self.btnIsNormal = QtGui.QRadioButton('Normal')
-
-        # self.dataType.addButton(self.btnPacing, 0)
-        # self.dataType.addButton(self.btnIsNormal, 1)
-        # self.dataType.setExclusive(True)     
-        # print("ISNormal ? ", self.isNormal)
-
-        # if self.isNormal is 0 :
-        #     self.change_physiology_to_pacing()        
-        # else:
-        #     self.change_physiology_to_normal()        
-
-
-        # w1.addWidget(self.btnIsNormal,row=self.add_one(),col=0)
-        # w1.addWidget(self.btnPacing,row=self.add_one(), col=0)
-
-        # label = QtGui.QLabel('Usage info')
-        # label.setAlignment(QtCore.Qt.AlignTop)
-
        
-        self.btnFindSWEvents = QtGui.QPushButton('Compute Slow-Wave Events')
+        self.btnFindSWEvents = QtGui.QPushButton('Detect Slow-Wave Events')
         self.amplitudeMapping = QtGui.QPushButton('Amplitude and Event Mapping')
         self.btnViewLiveData = QtGui.QPushButton('Live Mapping')
         # self.btnShowPacingEvents = QtGui.QPushButton('Show Pacing Events')
@@ -426,16 +402,6 @@ class GuiWindowDocks:
 
 
 
-    # def change_physiology_to_normal(self) :
-    #     self.isNormal = 1
-    #     self.btnIsNormal.setChecked(1)
-
-
-    # def change_physiology_to_pacing(self) :
-    #     self.isNormal = 0        
-    #     self.btnPacing.setChecked(1)
-
-
     def repaint_plots(self):
 
         self.curves_left = []
@@ -520,7 +486,7 @@ class GuiWindowDocks:
 
 
 
-    def compute_slow_wave_events(self) :
+    def detect_slow_wave_events(self) :
 
         self.s1sw.clear()
         self.s2sw.clear()
@@ -534,7 +500,7 @@ class GuiWindowDocks:
         testData = np.reshape(sp.dat['SigPy']['dataForMarking'], -1)
 
         windowSize = 36
-        overlap = 0.5
+        overlap = 0.1
 
         indexJump = int(overlap * windowSize)
 
@@ -578,14 +544,18 @@ class GuiWindowDocks:
         for j in range(0, len(testData), indexJump):
 
             count += 1
+            # if (len(np.where(swLocs == count)[0]) > 0 and len(np.where(swLocs == count + 1)[0]) > 0):# and (j > winRange)) :
             if (len(np.where(swLocs == count)[0]) > 0):# and (j > winRange)) :
+
                 maxIndex = np.argmax( np.absolute(np.diff(testData[j:j + winRangeMultiplier])))
                 prediction[j+maxIndex] = 1
                 j += winRangeMultiplier
 
         print("prediction.shape: ", prediction.shape)
-
-        print("nSW Predictions to X locations: ", len(np.where(prediction == 1)[0]))
+        nSWevents = len(np.where(prediction == 1)[0])
+        print("nSW Predictions to X locations: ", nSWevents)
+        statBarMessage = str(nSWevents) + " slow wave events detected "
+        self.statBar.showMessage(statBarMessage)
 
         linear_at_uncorrected = np.array(np.where(prediction == 1))
         # linear_at_uncorrected = np.array(np.where(preds == 1))
@@ -642,9 +612,9 @@ class GuiWindowDocks:
         self.s2sw.addPoints(x=pos_np[1], y=(pos_np[0]+0.75))
 
         # Convert event co-ordinates to indices for  2d TOA to output to GEMS
-        self.statBar.showMessage("Finished classifying slow wave events.", 1000)
 
         update_GEMS_data_with_TOAs(pos_np, nChans)        
+
 
 
     def show_cleaned_pacing(self) :
@@ -723,6 +693,7 @@ class GuiWindowDocks:
 
         self.ampMap.play(self.ampMap.currentFrameRate)
         self.btn_animation_set_pause()
+        self.playPauseUI_repaint()
 
 
 
@@ -731,76 +702,104 @@ class GuiWindowDocks:
 
         self.ampMap.play(0)
         self.btn_animation_set_play()
+        self.playPauseUI_repaint()
 
 
 
     def change_animation_data_to_chans(self) :
 
-        self.ampMap.gridDataToAnimate = sp.dat['SigPy']['gridChannelData']
+        self.datToAnimate= sp.dat['SigPy']['gridChannelData']
         self.change_animation_data()
+        self.playPauseUI_repaint()        
 
 
 
     def change_animation_data_to_events(self) :
         if 'gridEventData' in sp.dat['SigPy'].keys() :
-            self.ampMap.gridDataToAnimate = sp.dat['SigPy']['gridEventData']
+            self.datToAnimate = sp.dat['SigPy']['gridEventData']
             self.change_animation_data()
         else:
-            self.statBar.showMessage("First run 'Compute Slow-wave events'")
+            self.statBar.showMessage("First run 'Detect Slow-wave events'")
 
 
 
     def change_animation_data(self) :
+        self.playPauseUI_repaint()
 
         self.ampMap.priorIndex = self.ampMap.currentIndex        
         self.ampMap.currentIndex = self.ampMap.priorIndex
         self.ampMap.setLevels(0.5, 1.0)
 
 
-        self.ampMap.setImage(self.ampMap.gridDataToAnimate)
 
-        self.play_animation()        
+        self.ampMap.setImage(self.add_row_padding_to_grid_data(self.datToAnimate))
+
+        self.play_animation() 
 
 
 
     def change_frameRate(self, intVal):
+        self.playPauseUI_repaint()
 
         self.ampMap.currentFrameRate = intVal
-        fpsLabelStr = str(round((self.ampMap.currentFrameRate / self.ampMap.realFrameRate),1)) + " x"
+        fpsLabelStr = str(np.round((self.ampMap.currentFrameRate / self.ampMap.realFrameRate)[0],1)[0]) + " x"
         self.fpsLabel.setText(fpsLabelStr)
 
         if self.ampMap.Playing == True :
             self.ampMap.play(self.ampMap.currentFrameRate)
 
+        self.playPauseUI_repaint()
 
+
+    def playPauseUI_repaint(self):
+        self.btnPlayPause.repaint()
+        self.speedSlider.repaint()
+        self.LayoutWidgetPlayPauseSpeed.repaint()
+        self.fpsLabel.repaint()
+        
+        self.btnAmplitude.repaint()
+        self.btnCNNEvents.repaint()
+
+
+    def add_row_padding_to_grid_data(self,datToAnimate):
+        padH = 1
+        datToAnimateShape = datToAnimate.shape[0], datToAnimate.shape[1], datToAnimate.shape[2] + padH
+        paddedDatToAnimate = np.ones(shape=datToAnimateShape)
+        paddedDatToAnimate[:, :, padH : paddedDatToAnimate.shape[2]] = datToAnimate
+        return paddedDatToAnimate
 
     def plot_amplitude_map(self):
 
         # Create animation window
         self.ampMap = pg.ImageView()
+        print(self.ampMap.view.state['limits'])
+        self.ampMap.view.setLimits(xMin=0, xMax=16, yMin=0, yMax=16, minXRange=0, maxXRange=16, minYRange=0, maxYRange=16)
+        print(self.ampMap.view.state['limits'])
+     
+        # allowed = ['xMin', 'xMax', 'yMin', 'yMax', 'minXRange', 'maxXRange', 'minYRange', 'maxYRange']
+
         self.ampMap.setWindowTitle("Mapped Animating")
 
         # Preload data
 
         sp.dat['SigPy']['gridChannelData'] = map_channel_data_to_grid()
 
-
-
         if 'toaIndx' not in sp.dat['SigPy'] :
-            self.statBar.showMessage("Note! To plot CNN SW event data, please first run Compute Slow-Wave Events.")
+            self.statBar.showMessage("Note! To plot CNN SW event data, please first run Detect Slow-Wave Events.")
         else:
             sp.dat['SigPy']['gridEventData'] = map_event_data_to_grid_with_trailing_edge()
 
         gridDataToAnimate = sp.dat['SigPy']['gridChannelData']
 
 
-        self.ampMap.setImage(gridDataToAnimate)
+        self.ampMap.setImage(self.add_row_padding_to_grid_data(gridDataToAnimate))
         self.ampMap.show()        
 
         ## ======= TOP NAV ===========
         ## -- Play pause speed controls
         # Set default animation speed to sampling frequency fps
-        self.ampMap.singleStepVal = round((sp.dat['SigPy']['sampleRate'] / 2), 1)
+
+        self.ampMap.singleStepVal = np.round((sp.dat['SigPy']['sampleRate'] / 2)[0], 1)
 
         self.ampMap.currentFrameRate = sp.dat['SigPy']['sampleRate']
         self.ampMap.realFrameRate = sp.dat['SigPy']['sampleRate']
@@ -821,7 +820,7 @@ class GuiWindowDocks:
         
         self.speedSlider.valueChanged.connect(self.change_frameRate)
 
-        fpsLabelStr = str(round((self.ampMap.currentFrameRate / self.ampMap.realFrameRate),1)) + " x"
+        fpsLabelStr = str(np.round((self.ampMap.currentFrameRate / self.ampMap.realFrameRate)[0],1)[0]) + " x"
         self.fpsLabel = QtGui.QLabel(fpsLabelStr)
 
 
@@ -841,24 +840,24 @@ class GuiWindowDocks:
         self.radioGrpAnimationData.addButton(self.btnAmplitude, 0)
         self.radioGrpAnimationData.addButton(self.btnCNNEvents, 1)
 
-
         self.radioGrpAnimationData.setExclusive(True)        
-
 
         ## -- Add toolbar widgets to a proxy container widget 
         self.LayoutWidgetPlayPauseSpeed = QtGui.QWidget()
         self.qGridLayout = QtGui.QGridLayout()
 
+        # self.qGridLayout.setRowMinimumHeight(0, 50)
+
         self.qGridLayout.setHorizontalSpacing(14)
 
         self.qGridLayout.setContentsMargins(8,0,8,0)
 
-        self.qGridLayout.addWidget(self.btnPlayPause, 0,0, alignment=1)
-        self.qGridLayout.addWidget(self.speedSlider, 0,1, alignment=1)
-        self.qGridLayout.addWidget(self.fpsLabel, 0,2, alignment=1)
+        self.qGridLayout.addWidget(self.btnPlayPause, 0,0)
+        self.qGridLayout.addWidget(self.speedSlider, 0,1)
+        self.qGridLayout.addWidget(self.fpsLabel, 0,2)
 
-        self.qGridLayout.addWidget(self.btnAmplitude, 0,3, alignment=1)
-        self.qGridLayout.addWidget(self.btnCNNEvents, 0,4, alignment=1)
+        self.qGridLayout.addWidget(self.btnAmplitude, 0,3)
+        self.qGridLayout.addWidget(self.btnCNNEvents, 0,4)
 
         self.LayoutWidgetPlayPauseSpeed.setLayout(self.qGridLayout)
 
@@ -1066,9 +1065,6 @@ class GuiWindowDocks:
 
         # Set plot data
         self.set_plot_data(sp.dat['SigPy']['dataToPlot'], sp.dat['SigPy']['dataToPlot'].shape[0], sp.dat['SigPy']['dataToPlot'].shape[1])
-
-
-
 
         self.statBar.showMessage("Finished repainting plots!", 2000)
 
