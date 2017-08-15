@@ -22,7 +22,7 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath, isNormal):
     :return: predictions for the entire data set
     """
 
-    print("load_GEMS_mat_into_SigPy")
+    print("Load GEMS file to sigpy...")
     sp.dat = sio.loadmat(fileNameAndPath, matlab_compatible=True) #added matlab_compatible=True to aid GEMS compatibility
     # Check if this file has been saved from SigPy and whether it has been copied
     if hasattr(sp.dat, 'GEMSorig_toapp'):
@@ -44,11 +44,11 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath, isNormal):
     if not isNormal :
 
         sp.dat['SigPy']['dataIsNormal'] = 0
-        print("Cleaning pacing data")
+        print("Processing pacing data")
 
         sp.dat['SigPy']['MarkersPacing'], sp.dat['SigPy']['dataPacingCleaned'] = clean_pacing(sp.dat['SigPy']['dataFilt'])
 
-        print("Normalising cleaning pacing data for marking ...")
+        print("Normalising data for marking ...")
 
         sp.dat['SigPy']['dataForMarking'] = preprocess(sp.dat['SigPy']['dataPacingCleaned'])
 

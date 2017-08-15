@@ -355,7 +355,7 @@ class GuiWindowDocks:
         self.data = data
         self.trainingDataPlot.set_plot_data(data)
         self.set_curve_item(nPlots, nSize)
-        print("self.data.shape: ", self.data.shape, " nPlots: ", nPlots, " nSize: ", nSize)
+        #print("self.data.shape: ", self.data.shape, " nPlots: ", nPlots, " nSize: ", nSize)
         for i in range(nPlots) :
             self.curves_left[i].setData(data[i])
             self.curves_right[i].setData(data[i])
@@ -374,10 +374,10 @@ class GuiWindowDocks:
         # Convert indices to time for ticks -- multiply indices by time between samples and add original starting time.
         tickLabels = [str((i*sp.dat['SigPy']['timeBetweenSamples']+sp.dat['SigPy']['timeStart']).astype(int)[0][0]) for i in tickRange]
 
-        print(tickLabels)
+        #print(tickLabels)
 
         ticks = [list(zip(tickRange, tickLabels))]
-        print(ticks)
+        #print(ticks)
 
         ax.setTicks(ticks)
 
@@ -494,8 +494,8 @@ class GuiWindowDocks:
 
         self.statBar.showMessage("Training and classifying. . .")
         print("Training (perhaps) and classifying")
-        print("sp.dat['SigPy']['dataForMarking'].shape: ", sp.dat['SigPy']['dataForMarking'].shape)
-        print("self.data.shape: ", self.data.shape)
+        #print("sp.dat['SigPy']['dataForMarking'].shape: ", sp.dat['SigPy']['dataForMarking'].shape)
+        #print("self.data.shape: ", self.data.shape)
         
         testData = np.reshape(sp.dat['SigPy']['dataForMarking'], -1)
 
@@ -599,8 +599,8 @@ class GuiWindowDocks:
 
         pos_np = np.asarray(pos).transpose()
 
-        print("self.data.shape: ", self.data.shape)
-        print("pos_np[1].size: ", pos_np.size)
+        #print("self.data.shape: ", self.data.shape)
+        #print("pos_np[1].size: ", pos_np.size)
 
 
         if pos_np.size is 0:
@@ -625,8 +625,8 @@ class GuiWindowDocks:
 
             sp.dat['SigPy']['MarkersPacing'], sp.dat['SigPy']['dataPacingCleaned'] = clean_pacing(sp.dat['SigPy']['dataFilt'])
             self.MarkersPacing = sp.dat['SigPy']['MarkersPacing']
-            print("self.MarkersPacing: ", self.MarkersPacing[0])
-            print("self.MarkersPacing: ", self.MarkersPacing[1])
+            #print("self.MarkersPacing: ", self.MarkersPacing[0])
+            #print("self.MarkersPacing: ", self.MarkersPacing[1])
 
             self.s1pacing.clear()
             self.s2pacing.clear()
@@ -1072,7 +1072,7 @@ class GuiWindowDocks:
 
     def save_as_file_selector(self):
 
-        sp.datFileName = QtGui.QFileDialog.getSaveFileName(None, "Save As File", sp.datFileName, "*.mat")
+        sp.datFileName = QtGui.QFileDialog.getSaveFileName(None, "Save As File","", "*.mat")
 
         if not (sys.platform == "linux2") :
             sp.datFileName = sp.datFileName[0]        
