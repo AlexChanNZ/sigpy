@@ -32,16 +32,15 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath, isNormal):
 
     else:
         #Duplicate original gems file and create SigPy structure
-        sp.dat['GEMSorig_toapp'] = sp.dat['toapp'][0,0]
-
-
+        sp.dat['GEMSorig_toapp'] = np.array(sp.dat['toapp'][0,0])
+    
     sp.dat['SigPy'] = {}
-    sp.dat['SigPy']['dataFilt'] = sp.dat['toapp']['filtdata'][0,0]
+    sp.dat['SigPy']['dataFilt'] = np.array(sp.dat['toapp']['filtdata'][0,0])
 
     print("Normalising plotting data ...")
 
     sp.dat['SigPy']['dataToPlot'] =  preprocess(sp.dat['SigPy']['dataFilt'])
-
+    
     if not isNormal :
 
         sp.dat['SigPy']['dataIsNormal'] = 0
@@ -57,7 +56,6 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath, isNormal):
 
         sp.dat['SigPy']['dataIsNormal'] = 1
         sp.dat['SigPy']['dataForMarking'] = sp.dat['SigPy']['dataToPlot']
-
 
     sp.dat['SigPy']['bdfdef'] = sp.dat['bdfdef'][0,0]    
     sp.dat['SigPy']['sampleRate'] = sp.dat['toapp']['fs'][0,0]
@@ -84,7 +82,7 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath, isNormal):
 def save_GEMS_SigPy_file(fileNameAndPath):
 
     # To overwrite original GEMS data, comment this out to save GEMS data as backup.
-    # sp.dat.pop('SigPy', None)
+    sp.dat.pop('SigPy', None)
     sp.dat.pop('GEMSorig_toapp', None)
     sp.dat.pop('GEMSorig_bdfdef', None)
     # sp.dat.pop('bdfdef', None) #popping bdfdef because of UI control compatibility. 
@@ -140,7 +138,7 @@ def update_GEMS_data_with_TOAs(pos_np, nChans) :
 
     sp.dat['SigPy']['toaIndx'] = toaIndx
     sp.dat['SigPy']['toaCell'] = toaCell
-
+    
     sp.dat['toapp']['toaIndx'][0,0] = toaIndx
     sp.dat['toapp']['toaCell'][0,0] = toaCell
 

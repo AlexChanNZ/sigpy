@@ -500,7 +500,7 @@ class GuiWindowDocks:
         testData = np.reshape(sp.dat['SigPy']['dataForMarking'], -1)
 
         windowSize = 36
-        overlap = 0.1
+        overlap = 0.5
 
         indexJump = int(overlap * windowSize)
 
