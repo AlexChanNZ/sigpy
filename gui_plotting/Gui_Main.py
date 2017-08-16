@@ -89,8 +89,8 @@ class GuiMain(QtGui.QMainWindow):
 
     def reset_add_plots(self) :
         self.LinePlots = []
-        del self.LinePlots
         self.LinePlots = GuiLinePlots()
+
         if hasattr(self, 'd_plots'):
             self.d_plots.close()
         self.d_plots = Dock("Plots", size=(500, 200))
@@ -128,6 +128,7 @@ class GuiMain(QtGui.QMainWindow):
 
 
     def detect_slow_wave_events(self):
+        
         print("In detect slow wave events")
         self.statBar.showMessage("Training and classifying. . .")
 
@@ -152,11 +153,10 @@ class GuiMain(QtGui.QMainWindow):
         predictionWindows = np.array(predictionWindows_list)
 
         # Create neural net and classify
-        print("Creating neural net")
+        print("Creating neural net and classifying")
         swCNN = SlowWaveCNN()
         swPredictions, swLocs = swCNN.classify_data(predictionWindows, self.cnnType)
         nSwLocs = len(swLocs)       
-
 
 
         # Mark classification on plots if slow waves were found  
@@ -168,7 +168,6 @@ class GuiMain(QtGui.QMainWindow):
         print("Total predictions: ", len(swPredictions))
         print("Number SW raw predictions: ", nSwLocs)
         print("Ultimate number of sws marked: ", self.LinePlots.nSWsMarked)
-
 
         # Output number of events marked (note this number may differ from the CNN n of predictions)
         statBarMessage = str(self.LinePlots.nSWsMarked) + " slow wave events marked "
@@ -223,7 +222,7 @@ class GuiMain(QtGui.QMainWindow):
         if not (sys.platform == "linux2") :
             sp.datFileName = sp.datFileName[0]  
 
-        save_file_selector(self)
+        self.save_file_selector()
       
 
 

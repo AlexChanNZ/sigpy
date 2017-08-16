@@ -64,7 +64,7 @@ Intestine data
 # print(mat_contents)
 
 load_GEMS_mat_into_SigPy(dataFileAndRoot, dataFileIsNormal)
-
+sp.datFileName = os.path.basename(dataFileAndRoot)
 
 # Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__' :
