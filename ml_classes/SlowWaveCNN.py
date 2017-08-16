@@ -45,7 +45,7 @@ class SlowWaveCNN:
         self.train_neural_net(type_data_set);
         test_array = np.asarray(test_data)
         test_array = test_array.reshape((-1, 1, 6, 6))
-        print(test_array.shape)
+        #print(test_array.shape)
         sp.gui.statBar.showMessage("Classifying...")
         predictions = self.neural_net.predict(test_array)
         sp.gui.statBar.showMessage("Finished classifying.")

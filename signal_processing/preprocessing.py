@@ -27,8 +27,6 @@ def norm_first_clip(inData, clipLimits) :
 
 
 def norm_second_clip(secData, clipLims) : 
-	# print("Cliplims: ", clipLims[0], clipLims[1])
-	
 
 	#Shameer's secret sauce
 	normedData = np.copy(secData)
@@ -93,8 +91,8 @@ def get_extreme_chan_and_val(inData) :
 	maxVal, minVal = np.max(inData), np.min(inData)
 	maxChan, minChan = np.where(inData==maxVal)[0][0], np.where(inData==minVal)[0][0]
 
-	print("MaxVal: ", maxVal, "MaxChan", maxChan)
-	print("MinVal: ", minVal, "MinChan", minChan)
+	#print("MaxVal: ", maxVal, "MaxChan", maxChan)
+	#print("MinVal: ", minVal, "MinChan", minChan)
 
 	if (abs(maxVal) > abs(minVal)) :
 		return maxChan, inData[maxChan, :], maxVal 
@@ -190,8 +188,8 @@ def make_indices_plot_friendly(sampledIndices, nChans) :
 
 	nSamples = len(combinedSamples)
 
-	print("nSamples: ", nSamples)
-	print("combinedSamples: ", combinedSamples)
+	#print("nSamples: ", nSamples)
+	#print("combinedSamples: ", combinedSamples)
 
 
 	indicesX = np.array([])
@@ -202,7 +200,9 @@ def make_indices_plot_friendly(sampledIndices, nChans) :
 		indicesX = np.append(indicesX, [combinedSamples])
 		indicesY = np.append(indicesY, [[chan]] * nSamples)
 
-	print("indicesX.shape: ", indicesX.shape, " indicesY.shape ", indicesY.shape)
+	#print("indicesX.shape: ", indicesX.shape, " indicesY.shape ", indicesY.shape)
+	#print("indicesX: ", indicesX)
+	#print("indicesY: ", indicesY)
 
 	return [indicesY.astype(int), indicesX.astype(int)]
 
@@ -237,8 +237,8 @@ def clean_pacing_at_pacing_events(inData, pacingMarkers, nChans) :
 
 	cleanedData = np.empty(shape=inData.shape)
 	
-	print("pacingMarkers: ", pacingMarkers)
-	print("Starting cleaning of pacing events . . . ")
+	#print("pacingMarkers: ", pacingMarkers)
+	#print("Starting cleaning of pacing events . . . ")
 	for chan in range(0, nChans) :
 
 		currentChan = inData[chan,:]
@@ -246,11 +246,11 @@ def clean_pacing_at_pacing_events(inData, pacingMarkers, nChans) :
 		for startPaceEventMarker, endPaceEventMarker in zip(pacingMarkers[0], pacingMarkers[1]) :
 
 			# print("startPaceEventMarker: ", startPaceEventMarker, "endPaceEventMarker: ", endPaceEventMarker )
-			currentChan = smooth_segment(inData[chan], startPaceEventMarker, endPaceEventMarker, extraPoints=60)
+			currentChan = smooth_segment(inData[chan], startPaceEventMarker, endPaceEventMarker, extraPoints=20)
 
 		cleanedData[chan,:] = currentChan
 
-	print("Finished cleaning of pacing events . . . ")
+	print("Finished preprocessing of pacing data . . . ")
 
 	return cleanedData	
 
