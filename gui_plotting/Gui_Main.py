@@ -13,13 +13,11 @@ import sys
 sys.path.append('..')
 
 from multiprocessing import Process
-# Main GUI support
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 from pyqtgraph.dockarea import *
 
-from file_io.gems_sigpy import *
 
 import pickle
 import matplotlib as mpl  
@@ -30,12 +28,11 @@ import matplotlib.pyplot as plt
 # Locally-developed modules
 import config_global as sp
 
-# from gui_plotting.TrainingDataPlot import TrainingDataPlot
+from file_io.gems_sigpy import *
 
 from ml_classes.SlowWaveCNN import SlowWaveCNN
 
 from gui_plotting.Gui_Window import GuiWindow
-from gui_plotting.Gui_ControlPanel import GuiControlPanel
 from gui_plotting.Gui_LinePlots import GuiLinePlots
 from gui_plotting.Animate_Mapped import AnimateMapped
 from gui_plotting.Animate_Live import AnimateLive
