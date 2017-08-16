@@ -8,9 +8,6 @@ import numpy as np
 
 
 # Set default files names
-training_file_name = 'training_data.arff'
-test_file_name = 'test_data.arff'
-loaded_data_file = 'junk.mat'
 
 current_working_directory = os.getcwd()
 

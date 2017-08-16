@@ -26,7 +26,7 @@ from file_io.gems_sigpy import load_GEMS_mat_into_SigPy
 from signal_processing.preprocessing import preprocess
 from ml_classes.SlowWaveCNN import SlowWaveCNN
 from gui_plotting.mpl_plots  import *
-from gui_plotting.GuiWindowDocks import GuiWindowDocks
+from gui_plotting.Gui_Main import GuiMain
 
 import numpy as np
 np.set_printoptions(linewidth=1000, precision=3, threshold=np.inf)
@@ -41,10 +41,10 @@ defaultDataFile = "pig83_exp7_A_H_serosal_pacing_000.mat"
 defaultDataFile = "pig83_exp7_A_H_serosal_pacing_Elec_000_200plus400s.mat"
 dataFileIsNormal = False
 
-
 dataFileAndRoot = sp.userDataStore + defaultDataFile
 
 if not os.path.isfile(dataFileAndRoot) :
+
     defaultDataFile = 'sample_GEMS_normal.mat'
     dataFileAndRoot = sp.dataRoot + defaultDataFile
     dataFileIsNormal = True
@@ -65,16 +65,15 @@ Intestine data
 
 load_GEMS_mat_into_SigPy(dataFileAndRoot, dataFileIsNormal)
 
-sp.set_data_file_name((dataFileAndRoot.rsplit('/', 1)[1]))
-
-
-#vals = np.array(mat_contents['mark_cardiac'])
 
 # Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__' :
+    sp.app = QtGui.QApplication(sys.argv)
+    sp.app.setApplicationName('SigPy')
 
     # Run GUI
-    sp.gui = GuiWindowDocks(dataFileIsNormal)
+    sp.gui = GuiMain()
+    sp.gui.show()
 
     """
     Create data here and add to the curve

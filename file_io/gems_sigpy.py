@@ -57,6 +57,7 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath, isNormal):
         sp.dat['SigPy']['dataIsNormal'] = 1
         sp.dat['SigPy']['dataForMarking'] = sp.dat['SigPy']['dataToPlot']
 
+
     sp.dat['SigPy']['bdfdef'] = sp.dat['bdfdef'][0,0]    
     sp.dat['SigPy']['sampleRate'] = sp.dat['toapp']['fs'][0,0]
     sp.dat['SigPy']['timeStart'] = sp.dat['toapp']['filstartT'][0,0]

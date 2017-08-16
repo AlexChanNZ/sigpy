@@ -32,15 +32,7 @@ import config_global as sp
 class SlowWaveCNN:
 
     def __init__(self, training_set=None, events=None):
-        if training_set:
-            self.train_array = np.asarray(training_set).reshape((-1,1,6,6))
-        else:
-            self.train_array = np.array([])
-
-        if events:
-            self.label_array = np.asarray(events)
-        else:
-            self.label_array = np.array([])
+        pass
 
 
 
@@ -55,10 +47,11 @@ class SlowWaveCNN:
         test_array = test_array.reshape((-1, 1, 6, 6))
         print(test_array.shape)
         sp.gui.statBar.showMessage("Classifying...")
-        prediction = self.neural_net.predict(test_array)
+        predictions = self.neural_net.predict(test_array)
         sp.gui.statBar.showMessage("Finished classifying.")
+        eventsFound = np.where(predictions == 1)[0]
 
-        return prediction
+        return predictions, eventsFound
         
 
 
@@ -102,23 +95,23 @@ class SlowWaveCNN:
 
     def train_neural_net(self, type_data_set):
 
-        if self.label_array.size == 0:
+        if (type_data_set is 1):
+            
+            print("Using Normal CNN")
+            nnFileName = "nn_normal.cnn"
 
-            if (type_data_set is 1):
-                print("Using Normal CNN")
-                nnFileName = "nn_normal.cnn"
+        elif (type_data_set is 0):
+            print("Using Pacing CNN")
 
-            elif (type_data_set is 0):
-                print("Using Pacing CNN")
+            nnFileName = "nn_pacing.cnn"
 
-                nnFileName = "nn_pacing.cnn"
-
-            else:
-                print("No type selected")  
-                return
+        else:
+            print("No type selected")  
+            return
 
         nnFileNameAndPath = sp.nnPath + nnFileName            
         print("nnFileNameAndPath: ", nnFileNameAndPath)
+
         #Load CNN instead of training
         try:
             f = open(nnFileNameAndPath, 'rb')
@@ -127,7 +120,6 @@ class SlowWaveCNN:
             return
 
         except Exception as e:
-            sp.gui.statBar.showMessage("Training neural net ..")
 
             print("Training neural net ...")
                 
@@ -201,10 +193,5 @@ class SlowWaveCNN:
 
             pickle.dump(self.neural_net, open(nnFileNameAndPath, "wb"))
 
-
-
-    def train_and_classify(cnn, plotData, cnnType=None):
-
-        return pos_np
 
 

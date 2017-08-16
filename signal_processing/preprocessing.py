@@ -27,11 +27,12 @@ def norm_first_clip(inData, clipLimits) :
 
 
 def norm_second_clip(secData, clipLims) : 
+	# print("Cliplims: ", clipLims[0], clipLims[1])
+	
 
 	#Shameer's secret sauce
 	normedData = np.copy(secData)
 
-	# print("Cliplims: ", clipLims[0], clipLims[1])
 	minLocs = np.where(secData < clipLims[0])
 	maxLocs = np.where(secData > clipLims[1])
 
@@ -109,8 +110,6 @@ def find_pacing_threshold(inData) :
 
 	percentileNum = 9; # for the whisker ends
 
-	print(extremeChanValues)
-
 	# whiskerEdges = (np.mean(extremeChanValues) - np.std(extremeChanValues), np.mean(extremeChanValues) + np.std(extremeChanValues))
 
 	whiskerEdges = np.percentile(extremeChanValues, [percentileNum, 100-percentileNum])
@@ -178,11 +177,7 @@ def find_start_end_indices_of_pacing_events(indicesAboveThreshold) :
 		index = indicesAboveThresholdList[indexI+1]
 		endIndices = np.append(endIndices, index)
 
-
-	print("Startindices: ", startIndices)
-	print("EndIndices: ", endIndices)	
 	print("Startindices.shape: ", startIndices.shape, " endIndices.shape: ", endIndices.shape)
-
 
 	return (startIndices.astype(int), endIndices.astype(int))
 
@@ -208,8 +203,6 @@ def make_indices_plot_friendly(sampledIndices, nChans) :
 		indicesY = np.append(indicesY, [[chan]] * nSamples)
 
 	print("indicesX.shape: ", indicesX.shape, " indicesY.shape ", indicesY.shape)
-	print("indicesX: ", indicesX)
-	print("indicesY: ", indicesY)
 
 	return [indicesY.astype(int), indicesX.astype(int)]
 
