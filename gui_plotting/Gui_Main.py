@@ -43,7 +43,7 @@ class GuiMain(QtGui.QMainWindow):
     def __init__(self, parent=None):
 
         """
-        Initialise the properties of the GUI. This part of the code sets the docks, sizes
+        Initialise the properties of the GUI, setup docks, controls and plots
         :return: NULL
         """
         super(GuiMain, self).__init__(parent)
@@ -51,7 +51,6 @@ class GuiMain(QtGui.QMainWindow):
         self.ui.setupUi(self)
 
 
-        # Initialise data
         # Add menu, status bar, controls and plots
         self.add_menu_controls_and_plots()
 
@@ -84,7 +83,15 @@ class GuiMain(QtGui.QMainWindow):
 
         # Add main plots
         self.reset_add_plots()
-        
+
+
+    def set_dataType_text(self):
+        isNormal = sp.dat['SigPy']['dataIsNormal']
+        if isNormal:
+            self.dataTypeLabel.setText("Normal Data Selected")
+        else :
+            self.dataTypeLabel.setText("Pacing Data Selected")   
+
 
 
     def reset_add_plots(self) :
@@ -128,7 +135,7 @@ class GuiMain(QtGui.QMainWindow):
 
 
     def detect_slow_wave_events(self):
-        
+
         print("In detect slow wave events")
         self.statBar.showMessage("Training and classifying. . .")
 
@@ -176,7 +183,6 @@ class GuiMain(QtGui.QMainWindow):
 
 
     def plot_amplitude_map(self):
-
         self.animatedMap = AnimateMapped()
 
     def view_live_data(self):
@@ -246,12 +252,6 @@ class GuiMain(QtGui.QMainWindow):
         self.ctrlsRow+=1
         return self.ctrlsRow
 
-    def set_dataType_text(self):
-        isNormal = sp.dat['SigPy']['dataIsNormal']
-
-        if isNormal:
-            self.dataTypeLabel.setText("Normal Data Selected")
-        else :
-            self.dataTypeLabel.setText("Pacing Data Selected")        
+         
 
 

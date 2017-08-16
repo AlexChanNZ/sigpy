@@ -33,7 +33,6 @@ class AnimateLive():
             except (KeyboardInterrupt, SystemExit):
                 sys.exit()   
 
-
         # Create image item
         self.liveMapWin = pg.GraphicsWindow() 
         self.liveMapWin.setWindowTitle('Live Mapping')
@@ -44,16 +43,10 @@ class AnimateLive():
         self.liveMapWin.setCentralItem(self.liveMapViewBox)
         self.liveMapViewBox.setAspectLocked()
 
-        # ui.graphicsView.setCentralItem(vb)
-
         self.liveMapImageItem = pg.ImageItem()
         self.liveMapViewBox.addItem(self.liveMapImageItem)
 
-        # self.liveMapWidgetLayout = pg.LayoutWidget()
 
-        # self.liveMapWin.setLayout(self.liveMapGraphicsLayout)
-
-        # self.liveMapViewBox.addItem(self.liveMapRawImageWidget)
 
         self.lockDisplayThread = threading.Lock()
 
@@ -157,10 +150,8 @@ class AnimateLive():
                 print(e)
 
             nextFrameTime = timeStartDisplayingFrames + frame * timeBetweenSamplesAdjust
-            # print("nextFrameTime: ",nextFrameTime)
-            # print("currentFrameTime: ",time.time())
+
             sleepTime = nextFrameTime - time.time()
-            # print("sleepTime: ", sleepTime)
 
             if sleepTime > 0 :
                 time.sleep(sleepTime)
