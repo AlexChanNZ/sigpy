@@ -33,6 +33,10 @@ class LiveData(Thread):
 			self.maxIndex = self.dataSource.shape[1]
 			self.bufferedChunk = self.dataSource[:,0]
 
+
+		self.nChans = self.dataSource.shape[0]
+
+
 		self.stampToIndexMultiplier = 1 / self.dSourceSampleRate
 		self.priorBufferedChunk = np.copy(self.bufferedChunk).reshape(-1,1)
 
@@ -41,7 +45,7 @@ class LiveData(Thread):
 		self.timeToSleep = 0.1
 		
 		self.lastIndex = 0
-		self.bufferedChunk = np.zeros(shape=(nChans,1))
+		self.bufferedChunk = np.zeros(shape=(self.nChans,1))
 
 		self.newChunk = False
 		self.shouldStop = False
@@ -62,6 +66,7 @@ class LiveData(Thread):
 				self.lastIndex += 1 				
 
 				#Add frame to buffer
+
 				self.bufferedChunk = np.hstack((self.bufferedChunk, self.dataSource[:,self.lastIndex].reshape(-1,1))) #, axis=1)
 
 				# Update capture time

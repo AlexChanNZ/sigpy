@@ -13,6 +13,8 @@ import time
 class AnimateLive():
 
     def __init__(self):
+        self.nSamplesPerChunkIdealised = 30
+        self.desiredChunkSizeMultiplier = 4
         self.animate_live_data()
 
 
@@ -73,7 +75,6 @@ class AnimateLive():
     
 
         # Reset buffer keeping only the last frame in memory
-
         self.lastFrame = self.LiveData.bufferedChunk[:,(self.nSamplesCaptured-1)].reshape(-1,1)                
         self.LiveData.bufferedChunk = self.lastFrame
         print("Buffer Reset!")
@@ -101,8 +102,7 @@ class AnimateLive():
 
         print("In data pulling thread")
         print("self.LiveData.timeBetweenSamples: ", self.LiveData.timeBetweenSamples)
-        self.nSamplesPerChunkIdealised = 30
-        self.desiredPriorChunkSize =  self.nSamplesPerChunkIdealised * 4
+        self.desiredPriorChunkSize =  self.nSamplesPerChunkIdealised * self.desiredChunkSizeMultiplier
 
         self.priorBufferedChunk = self.LiveData.bufferedChunk
 
@@ -135,6 +135,37 @@ class AnimateLive():
                 print("Display thread stopping.")
                 self.LiveData.shouldStop = True
                 break
+
+
+    # Display chunk at a rate matching the capture rate
+    def live_animate(self) :
+
+        timeBetweenSamplesAdjust = (self.nSamplesPerChunkIdealised * self.LiveData.timeBetweenSamples / self.nSamplesCaptured)
+        timeStartDisplayingFrames = time.time()
+
+        # self.liveMapViewBox.removeItem(self.liveMapImageItem)
+        # self.liveMapViewBox.addItem(self.liveMapImageItem)
+
+        for frame in range(0, self.mappedPreprocessedData.shape[0] ) :
+
+            try:
+                self.lockDisplayThread.acquire() 
+                self.liveMapImageItem.setImage(self.mappedPreprocessedData[frame,:,:])
+                self.lockDisplayThread.release() 
+
+            except Exception as e:
+                print(e)
+
+            nextFrameTime = timeStartDisplayingFrames + frame * timeBetweenSamplesAdjust
+            # print("nextFrameTime: ",nextFrameTime)
+            # print("currentFrameTime: ",time.time())
+            sleepTime = nextFrameTime - time.time()
+            # print("sleepTime: ", sleepTime)
+
+            if sleepTime > 0 :
+                time.sleep(sleepTime)
+
+        print(frame," frames displayed.")                
 
 
 
