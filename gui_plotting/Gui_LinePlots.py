@@ -67,7 +67,7 @@ class GuiLinePlots:
         if "MarkersPacing" in sp.dat['SigPy'].keys() :
 
             self.MarkersPacing = sp.dat['SigPy']['MarkersPacing']
-            print("MarkersPacing key found!")
+            #print("MarkersPacing key found!")
             self.pacingEventsOn = False
 
         else :
@@ -185,7 +185,7 @@ class GuiLinePlots:
 
     def set_plot_data(self):
 
-        print("self.plotData.shape: ", self.plotData.shape)
+        #print("self.plotData.shape: ", self.plotData.shape)
 
         
         # self.trainingDataPlot.set_plot_data(data)
@@ -210,7 +210,7 @@ class GuiLinePlots:
         tickLabels = [str((self.timeBetweenSamples * tick + self.timeStart).astype(int)[0][0]) for tick in tickRange]
 
         ticks = [list(zip(tickRange, tickLabels))]
-        print(ticks)
+        #print(ticks)
 
         ax.setTicks(ticks)
 
@@ -280,11 +280,29 @@ class GuiLinePlots:
         # Clean up duplicates
         swPositions_list = []        
         swLocsCleaned = np.array(np.where(predictions == 1))
+        
+        sync_events = [] 
+ 
+        # Check for sync events 
+        for val in swLocsCleaned.transpose(): 
+            sync_events.append(int(val % self.nSamples)) 
+        remove_sync_point = set([x for x in sync_events if sync_events.count(x) > int(0.20 * self.nChans)])
+ 
+         
+        #remove_sync_point.clear() 
+ 
+        # Remove the events that are marked exactly for more than 40 times along same x from the actual array 
+ 
+        for swPred in swLocsCleaned.transpose(): 
+            if int(swPred % self.nSamples) not in remove_sync_point: 
+                xIndex = int(swPred / self.nSamples)
+                yChannel = int((swPred % self.nSamples))
+                swPositions_list.append([xIndex, yChannel])
 
-        for swPred in swLocsCleaned.transpose():
-            xIndex = int(swPred / self.nSamples)
-            yChannel = int((swPred % self.nSamples))
-            swPositions_list.append([xIndex, yChannel])
+#        for swPred in swLocsCleaned.transpose():
+#            xIndex = int(swPred / self.nSamples)
+#            yChannel = int((swPred % self.nSamples))
+#            swPositions_list.append([xIndex, yChannel])
 
         self.swPositions = np.array(swPositions_list).transpose()
         self.nSWsMarked = len(self.swPositions[1])

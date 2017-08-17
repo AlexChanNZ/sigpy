@@ -26,7 +26,7 @@ class AnimateMapped():
 
     def btn_animation_set_play(self):
 
-        print("Setting play button")
+        #print("Setting play button")
 
         btnPlayIconPath = sp.graphicsPath + "btnPlayTiny.png"
 
@@ -42,7 +42,7 @@ class AnimateMapped():
 
     def btn_animation_set_pause(self):
 
-        print("Setting pause button")
+        #print("Setting pause button")
 
         self.btnPlayPause.setFixedHeight(20)
         self.btnPlayPause.setFixedWidth(20)
