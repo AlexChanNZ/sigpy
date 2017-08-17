@@ -108,7 +108,6 @@ class GuiMain(QtGui.QMainWindow):
 
 
 
-    # ==== CONTROLS AND ACTIONS ====
 
     def add_controls(self) :
 
@@ -133,6 +132,7 @@ class GuiMain(QtGui.QMainWindow):
         self.ctrlsLayout.addWidget(self.btnViewLiveData, row=self.add_one(), col=0)
 
 
+    # ==== EVENTS ====
 
     def detect_slow_wave_events(self):
 
@@ -149,12 +149,12 @@ class GuiMain(QtGui.QMainWindow):
         indexJump = int(overlap * windowSize)
 
         # Create prediction windows
-        nPredictionWindows = range(1, len(self.dataForMarking)-1, indexJump)
+        predictionWindowsIndices = range(1, len(self.dataForMarking)-1, indexJump)
 
         print("Creating prediction windows")
         predictionWindows_list = []
 
-        for j in nPredictionWindows:
+        for j in predictionWindowsIndices:
             if (len(self.dataForMarking[j:j+windowSize]) == windowSize):
                 predictionWindows_list.append(self.dataForMarking[j:j+windowSize])
         predictionWindows = np.array(predictionWindows_list)
@@ -214,9 +214,10 @@ class GuiMain(QtGui.QMainWindow):
         self.statBar.showMessage("Loading ...")
 
         load_GEMS_mat_into_SigPy(sp.datFileName, isNormal)
+
         self.reset_add_plots()
-        # self.LinePlots.refresh_plots()
         self.set_dataType_text()
+
         self.statBar.showMessage("Finished loading.")
 
 

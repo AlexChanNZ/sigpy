@@ -35,7 +35,6 @@ class SlowWaveCNN:
         pass
 
 
-
     def classify_data(self, test_data, type_data_set):
         """
         The data is classified based on the training data.
@@ -56,6 +55,7 @@ class SlowWaveCNN:
 
 
     def load_training_dataset(self, dataType):
+        
         trainingDataPlotPath = sp.dataRoot + '/' + dataType
         nFiles = 0
 
@@ -132,13 +132,6 @@ class SlowWaveCNN:
 
             else:
                 print("No training type selected")
-
-            # I believe the below lines aren't needed anymore
-            # print(X_train.shape)
-            # print(self.train_array.shape)
-            # X_train = np.append(X_train, self.train_array, axis=0)
-            # print(X_train.shape)
-            # Y_train = np.append(Y_train, self.label_array.transpose())
 
             nn = NeuralNet(
                     layers=[('input', layers.InputLayer),

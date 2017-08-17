@@ -71,6 +71,7 @@ class GuiLinePlots:
             self.pacingEventsOn = False
 
         else :
+
             self.MarkersPacing = []
 
         if "SWMarkers" in sp.dat['SigPy'].keys() :
@@ -95,6 +96,7 @@ class GuiLinePlots:
 
 
     def add_scatter_plots(self):
+
         self.clear_plots()
 
         c = pg.PlotCurveItem(pen=pg.mkPen('r', width=2))
@@ -106,6 +108,7 @@ class GuiLinePlots:
         self.plotsScroll.setXRange(0, 3000)    
 
         for i in range(self.nChans):
+
             c1 = pg.PlotCurveItem(pen=(i, self.nChans))
             c1.setPos(0, i)
             self.curves_left.append(c1)
@@ -115,6 +118,7 @@ class GuiLinePlots:
             c2.setPos(0, i)
             self.curves_right.append(c2)
             self.plotsZoomed.addItem(c2)
+
 
         self.swMarksScrlPlot = pg.ScatterPlotItem(size=8, pen=pg.mkPen(None), brush=pg.mkBrush(255, 255, 255, 160))
         self.swMarksZoomPlot = pg.ScatterPlotItem(size=8, pen=pg.mkPen(None), brush=pg.mkBrush(255, 255, 255, 160))
@@ -128,6 +132,7 @@ class GuiLinePlots:
         self.plotsZoomed.sigYRangeChanged.connect(self.updateRegion)
 
         if (len(self.markersSWs)==2) :
+
             self.swMarksScrlPlot.addPoints(x=self.markers[1], y=self.markers[0])
             self.swMarksZoomPlot.addPoints(x=self.markers[1], y=self.markers[0])
             print("Adding marker points.")
