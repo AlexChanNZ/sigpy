@@ -122,10 +122,10 @@ def find_pacing_threshold(inData) :
 
 	thresholdVal = np.mean(outliers)
 
-	print("WhiskerEdges: ", whiskerEdges)
-	print("Extreme val: ", extremeVal)
-	print("Quartile: ", quartile)
-	print("ThresholdVal: ", thresholdVal)
+	#print("WhiskerEdges: ", whiskerEdges)
+	#print("Extreme val: ", extremeVal)
+	#print("Quartile: ", quartile)
+	#print("ThresholdVal: ", thresholdVal)
 
 	return extremeChanValues, thresholdVal
 
