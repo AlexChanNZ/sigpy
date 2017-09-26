@@ -28,4 +28,6 @@ arff>=0.9
 * [Numpy](http://www.numpy.org) - NumPy is the fundamental package for scientific computing with Python.
 
 
-
+## Authors
+* **Shameer Sathar** - *Initial work, Algorithm Development, Signal Processing Techniques* 
+* **Terry Mayne** - *Bug Fixes, GUI Development* 
