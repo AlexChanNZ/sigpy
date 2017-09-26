@@ -28,18 +28,4 @@ arff>=0.9
 * [Numpy](http://www.numpy.org) - NumPy is the fundamental package for scientific computing with Python.
 
 
-## Versioning
-...
-
-
-## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
 
