@@ -26,7 +26,7 @@ def norm_first_clip(inData, clipLimits) :
 
 
 
-def norm_second_clip(secData, clipLims) : 
+def norm_second_clip(secData, clipLims) :
 
 	#Shameer's secret sauce
 	normedData = np.copy(secData)
@@ -67,7 +67,7 @@ def normalise_chan_data(chanData) :
 		chanData = clippedData[chan,:]
 		clipLimits = get_deviation_from_median(chanData)
 		chanDataSecondClip = norm_second_clip(chanData, clipLimits)
-		normalisedData[chan, :] = sklearn.preprocessing.MinMaxScaler().fit_transform(chanDataSecondClip)
+		normalisedData[chan, :] = sklearn.preprocessing.minmax_scale(chanDataSecondClip)
 		# Classic normalisation [0,1]
 
 	return normalisedData
@@ -95,10 +95,10 @@ def get_extreme_chan_and_val(inData) :
 	#print("MinVal: ", minVal, "MinChan", minChan)
 
 	if (abs(maxVal) > abs(minVal)) :
-		return maxChan, inData[maxChan, :], maxVal 
+		return maxChan, inData[maxChan, :], maxVal
 
 	else :
-		return minChan, inData[minChan, :], minVal 
+		return minChan, inData[minChan, :], minVal
 
 
 
@@ -112,7 +112,7 @@ def find_pacing_threshold(inData) :
 
 	whiskerEdges = np.percentile(extremeChanValues, [percentileNum, 100-percentileNum])
 
-	if (extremeVal < 0) : 
+	if (extremeVal < 0) :
 		quartile = np.min(whiskerEdges)
 		outliers = extremeChanValues[np.where(extremeChanValues < quartile)]
 
@@ -236,7 +236,7 @@ def clean_pacing_at_pacing_events(inData, pacingMarkers, nChans) :
 	nMarkers = len(pacingMarkers)
 
 	cleanedData = np.empty(shape=inData.shape)
-	
+
 	#print("pacingMarkers: ", pacingMarkers)
 	#print("Starting cleaning of pacing events . . . ")
 	for chan in range(0, nChans) :
@@ -252,7 +252,7 @@ def clean_pacing_at_pacing_events(inData, pacingMarkers, nChans) :
 
 	print("Finished preprocessing of pacing data . . . ")
 
-	return cleanedData	
+	return cleanedData
 
 
 

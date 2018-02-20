@@ -12,7 +12,7 @@ import scipy.io as sio
 import theano
 
 
-# from theano.tensor.signal import downsample 
+# from theano.tensor.signal import downsample
 # need to swap above import with these below two for more recent version of theano
 from theano.tensor.signal import pool
 from theano.tensor.signal.pool import pool_2d
@@ -51,11 +51,11 @@ class SlowWaveCNN:
         eventsFound = np.where(predictions == 1)[0]
 
         return predictions, eventsFound
-        
+
 
 
     def load_training_dataset(self, dataType):
-        
+
         trainingDataPlotPath = sp.dataRoot + '/' + dataType
         nFiles = 0
 
@@ -81,22 +81,22 @@ class SlowWaveCNN:
                     else:
 
                         X_train = trainingSamples[0:2000,:]
-                        Y_train = trainingLabels[0:2000,:]        
+                        Y_train = trainingLabels[0:2000,:]
                 except Exception as e:
-                    print("Exception: ", e)      
-                    print("Caused by file: ", trainingFile)      
+                    print("Exception: ", e)
+                    print("Caused by file: ", trainingFile)
 
-        
+
         X_train = X_train.reshape((-1, 1, 6, 6))
 
         return X_train, Y_train
-        
+
 
 
     def train_neural_net(self, type_data_set):
 
         if (type_data_set is 1):
-            
+
             print("Using Normal CNN")
             nnFileName = "nn_normal.cnn"
 
@@ -106,10 +106,10 @@ class SlowWaveCNN:
             nnFileName = "nn_pacing.cnn"
 
         else:
-            print("No type selected")  
+            print("No type selected")
             return
 
-        nnFileNameAndPath = sp.nnPath + nnFileName            
+        nnFileNameAndPath = sp.nnPath + nnFileName
         print("nnFileNameAndPath: ", nnFileNameAndPath)
 
         #Load CNN instead of training
@@ -122,7 +122,7 @@ class SlowWaveCNN:
         except Exception as e:
 
             print("Training neural net ...")
-                
+
             if (type_data_set is 1):
                 X_train, Y_train = self.load_training_dataset("normal")
 
@@ -150,10 +150,10 @@ class SlowWaveCNN:
                         conv2d1_num_filters=32,
                         conv2d1_filter_size=(3, 3),
                         conv2d1_nonlinearity=lasagne.nonlinearities.rectify,
-                        conv2d1_W=lasagne.init.GlorotUniform(),  
+                        conv2d1_W=lasagne.init.GlorotUniform(),
                         # layer maxpool1
-                        maxpool1_pool_size=(2, 2),    
-                    
+                        maxpool1_pool_size=(2, 2),
+
                         # layer conv2d2
                         conv2d2_num_filters=32,
                         conv2d2_filter_size=(2, 2),
@@ -161,12 +161,12 @@ class SlowWaveCNN:
                         # layer maxpool2
                         maxpool2_pool_size=(1, 1),
                         # dropout1
-                        dropout1_p=0.5,    
+                        dropout1_p=0.5,
                         # dense
                         dense_num_units=256,
-                        dense_nonlinearity=lasagne.nonlinearities.rectify,    
+                        dense_nonlinearity=lasagne.nonlinearities.rectify,
                         # dropout2
-                        dropout2_p=0.5,    
+                        dropout2_p=0.5,
                         # output
                         output_nonlinearity=lasagne.nonlinearities.softmax,
                         output_num_units=2,
@@ -174,7 +174,7 @@ class SlowWaveCNN:
                         update=nesterov_momentum,
                         update_learning_rate=0.01,
                         update_momentum=0.9,
-                        max_epochs=100,
+                        max_epochs=10,
                         verbose=1,
                         )
 
@@ -185,6 +185,3 @@ class SlowWaveCNN:
             sp.gui.statBar.showMessage("Finished training the network.")
 
             pickle.dump(self.neural_net, open(nnFileNameAndPath, "wb"))
-
-
-
