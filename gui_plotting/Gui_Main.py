@@ -171,10 +171,11 @@ class GuiMain(QtGui.QMainWindow):
             self.LinePlots.mark_slow_wave_events(self.dataForMarking, swPredictions, swLocs, windowSize, indexJump)
 
         # Output (logging and for user)
-        print("Testdata length ", self.LinePlots.nSamples)   
-        print("Total predictions: ", len(swPredictions))
-        print("Number SW raw predictions: ", nSwLocs)
-        print("Ultimate number of sws marked: ", self.LinePlots.nSWsMarked)
+        #print("Testdata length ", self.LinePlots.nSamples)   
+        #print("Total predictions: ", len(swPredictions))
+        #print("Number SW raw predictions: ", nSwLocs)
+        #print("Ultimate number of sws marked: ", self.LinePlots.nSWsMarked)
+
 
         # Output number of events marked (note this number may differ from the CNN n of predictions)
         statBarMessage = str(self.LinePlots.nSWsMarked) + " slow wave events marked "
