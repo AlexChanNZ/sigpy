@@ -22,7 +22,7 @@ from lasagne import layers
 from lasagne.updates import nesterov_momentum
 
 from nolearn.lasagne import NeuralNet
-from nolearn.lasagne import visualize
+#from nolearn.lasagne import visualize
 
 # User defined imports
 from gui_plotting.mpl_plots import *
