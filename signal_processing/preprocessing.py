@@ -26,7 +26,7 @@ def norm_first_clip(inData, clipLimits) :
 
 
 
-def norm_second_clip(secData, clipLims) : 
+def norm_second_clip(secData, clipLims) :
 
 	#Shameer's secret sauce
 	normedData = np.copy(secData)
@@ -67,7 +67,7 @@ def normalise_chan_data(chanData) :
 		chanData = clippedData[chan,:]
 		clipLimits = get_deviation_from_median(chanData)
 		chanDataSecondClip = norm_second_clip(chanData, clipLimits)
-		normalisedData[chan, :] = sklearn.preprocessing.MinMaxScaler().fit_transform(chanDataSecondClip)
+		normalisedData[chan, :] = sklearn.preprocessing.minmax_scale(chanDataSecondClip)
 		# Classic normalisation [0,1]
 
 	return normalisedData
@@ -95,10 +95,10 @@ def get_extreme_chan_and_val(inData) :
 	#print("MinVal: ", minVal, "MinChan", minChan)
 
 	if (abs(maxVal) > abs(minVal)) :
-		return maxChan, inData[maxChan, :], maxVal 
+		return maxChan, inData[maxChan, :], maxVal
 
 	else :
-		return minChan, inData[minChan, :], minVal 
+		return minChan, inData[minChan, :], minVal
 
 
 
@@ -112,7 +112,7 @@ def find_pacing_threshold(inData) :
 
 	whiskerEdges = np.percentile(extremeChanValues, [percentileNum, 100-percentileNum])
 
-	if (extremeVal < 0) : 
+	if (extremeVal < 0) :
 		quartile = np.min(whiskerEdges)
 		outliers = extremeChanValues[np.where(extremeChanValues < quartile)]
 
@@ -236,7 +236,7 @@ def clean_pacing_at_pacing_events(inData, pacingMarkers, nChans) :
 	nMarkers = len(pacingMarkers)
 
 	cleanedData = np.empty(shape=inData.shape)
-	
+
 	#print("pacingMarkers: ", pacingMarkers)
 	#print("Starting cleaning of pacing events . . . ")
 	for chan in range(0, nChans) :
@@ -252,7 +252,7 @@ def clean_pacing_at_pacing_events(inData, pacingMarkers, nChans) :
 
 	print("Finished preprocessing of pacing data . . . ")
 
-	return cleanedData	
+	return cleanedData
 
 
 
@@ -271,48 +271,3 @@ def clean_pacing(chanData) :
 	pacingCleanedData = clean_pacing_at_pacing_events(chanData, pacingMarkers, nChans)
 
 	return pacingMarkersForPlotting, pacingCleanedData
-
-
-
-
-# %% Process the channel to be taken as reference
-# [data, threshold] = findThreshold(bdfdat); 
-
-# %% Find the point of stimulus based on threshold
-# x_threshold = 1:length(data)-1:length(data);
-# y_threshold = [threshold threshold];
-# figure;
-# plot(data);
-# hold on;
-# plot(x_threshold, y_threshold, 'r');
-# [x0, y0] = intersections(1:length(data), data, x_threshold, y_threshold);
-# hold on;
-# plot(x0, y0, 'og');
-
-
-
-# %% Save processed files
-# toapp.filtdata = bdfdat;
-# processed_file_name = strcat(PathName,'processed_', FileName);
-# if exist(processed_file_name, 'file') ==  2
-#     disp('File exists')
-# else
-#     save(processed_file_name, 'bdfdef', 'toapp')
-# end
-
-# %% Plot processed file name
-# pause('on');
-# figure;
-# plot_end=size(data,2);
-# plot_pace = x0;
-# plot_pace(find(x0 > plot_end)) = [];
-# for j = 32:64
-#     channel = j;
-#     ax1 = subplot(2,1,1);
-#     plot(bdfdat(channel,:));
-#     hold on;plot(plot_pace, 0, 'og');hold off;
-#     ax2 = subplot(2,1,2);
-#     plot(copy_bdf(channel,:));
-#     linkaxes([ax1,ax2],'xy');
-#     pause(2);
-# end	

@@ -20,7 +20,7 @@ from pyqtgraph.dockarea import *
 
 
 import pickle
-import matplotlib as mpl  
+import matplotlib as mpl
 
 mpl.use('TkAgg') # compatibility for mac
 import matplotlib.pyplot as plt
@@ -30,8 +30,8 @@ import config_global as sp
 
 from file_io.gems_sigpy import *
 
-from ml_classes.SlowWaveCNN import SlowWaveCNN
-
+#from ml_classes.SlowWaveCNN import SlowWaveCNN
+from ml_classes.SlowWaveCNNKeras1D import SlowWaveCNNKeras1D
 from gui_plotting.Gui_Window import GuiWindow
 from gui_plotting.Gui_LinePlots import GuiLinePlots
 from gui_plotting.Animate_Mapped import AnimateMapped
@@ -60,7 +60,7 @@ class GuiMain(QtGui.QMainWindow):
         self.setCentralWidget(self.area)
 
         self.setWindowTitle('SigPy')
-        self.showMaximized()        
+        self.showMaximized()
 
 
 
@@ -68,7 +68,7 @@ class GuiMain(QtGui.QMainWindow):
 
         # Add menu bar
         self.mbar = self.setMenuBar(self.ui.ui_menubar.ui_menubar)
-       
+
         # Add status bar
         self.statBar = self.statusBar()
 
@@ -90,7 +90,7 @@ class GuiMain(QtGui.QMainWindow):
         if isNormal:
             self.dataTypeLabel.setText("Normal Data Selected")
         else :
-            self.dataTypeLabel.setText("Pacing Data Selected")   
+            self.dataTypeLabel.setText("Pacing Data Selected")
 
 
 
@@ -104,11 +104,10 @@ class GuiMain(QtGui.QMainWindow):
 
         self.d_plots.addWidget(self.LinePlots.plotsScroll, row=0, col=0)
         self.d_plots.addWidget(self.LinePlots.plotsZoomed, row=0, col=1)
-        self.area.addDock(self.d_plots, 'right')  
+        self.area.addDock(self.d_plots, 'right')
 
 
 
-    # ==== CONTROLS AND ACTIONS ====
 
     def add_controls(self) :
 
@@ -116,16 +115,16 @@ class GuiMain(QtGui.QMainWindow):
         self.ctrlsRow = 0
 
         self.dataTypeLabel = QtGui.QLabel("")
-        self.dataTypeLabel.setAlignment(QtCore.Qt.AlignBottom)   
-        self.set_dataType_text()     
+        self.dataTypeLabel.setAlignment(QtCore.Qt.AlignBottom)
+        self.set_dataType_text()
 
         self.btnFindSWEvents = QtGui.QPushButton('Detect Slow-Wave Events')
         self.amplitudeMapping = QtGui.QPushButton('Amplitude and Event Mapping')
         self.btnViewLiveData = QtGui.QPushButton('Live Mapping')
 
         self.btnFindSWEvents.clicked.connect(lambda: self.detect_slow_wave_events())
-        self.amplitudeMapping.clicked.connect(lambda: self.plot_amplitude_map())                
-        self.btnViewLiveData.clicked.connect(lambda: self.view_live_data())        
+        self.amplitudeMapping.clicked.connect(lambda: self.plot_amplitude_map())
+        self.btnViewLiveData.clicked.connect(lambda: self.view_live_data())
 
         self.ctrlsLayout.addWidget(self.dataTypeLabel, row=self.add_one(), col=0)
         self.ctrlsLayout.addWidget(self.btnFindSWEvents, row=self.add_one(), col=0)
@@ -133,6 +132,7 @@ class GuiMain(QtGui.QMainWindow):
         self.ctrlsLayout.addWidget(self.btnViewLiveData, row=self.add_one(), col=0)
 
 
+    # ==== EVENTS ====
 
     def detect_slow_wave_events(self):
 
@@ -149,29 +149,29 @@ class GuiMain(QtGui.QMainWindow):
         indexJump = int(overlap * windowSize)
 
         # Create prediction windows
-        nPredictionWindows = range(1, len(self.dataForMarking)-1, indexJump)
+        predictionWindowsIndices = range(1, len(self.dataForMarking)-1, indexJump)
 
         print("Creating prediction windows")
         predictionWindows_list = []
 
-        for j in nPredictionWindows:
+        for j in predictionWindowsIndices:
             if (len(self.dataForMarking[j:j+windowSize]) == windowSize):
                 predictionWindows_list.append(self.dataForMarking[j:j+windowSize])
         predictionWindows = np.array(predictionWindows_list)
 
         # Create neural net and classify
         print("Creating neural net and classifying")
-        swCNN = SlowWaveCNN()
+        swCNN = SlowWaveCNNKeras1D()
         swPredictions, swLocs = swCNN.classify_data(predictionWindows, self.cnnType)
-        nSwLocs = len(swLocs)       
+        nSwLocs = len(swLocs)
 
 
-        # Mark classification on plots if slow waves were found  
+        # Mark classification on plots if slow waves were found
         if len(swLocs) > 0 :
             self.LinePlots.mark_slow_wave_events(self.dataForMarking, swPredictions, swLocs, windowSize, indexJump)
 
         # Output (logging and for user)
-        #print("Testdata length ", self.LinePlots.nSamples)   
+        #print("Testdata length ", self.LinePlots.nSamples)
         #print("Total predictions: ", len(swPredictions))
         #print("Number SW raw predictions: ", nSwLocs)
         #print("Ultimate number of sws marked: ", self.LinePlots.nSWsMarked)
@@ -187,14 +187,14 @@ class GuiMain(QtGui.QMainWindow):
         self.animatedMap = AnimateMapped()
 
     def view_live_data(self):
-        self.animateLive = AnimateLive()    
+        self.animateLive = AnimateLive()
 
 
 
     # ==== MENU BAR ACTIONS ====
 
     def setup_file_menu_triggers(self):
-        
+
         self.ui.ui_menubar.loadNormalAction.triggered.connect(
             lambda: self.load_file_selector__gui_set_data(isNormal=True))
         self.ui.ui_menubar.loadPacingAction.triggered.connect(
@@ -215,9 +215,10 @@ class GuiMain(QtGui.QMainWindow):
         self.statBar.showMessage("Loading ...")
 
         load_GEMS_mat_into_SigPy(sp.datFileName, isNormal)
+
         self.reset_add_plots()
-        # self.LinePlots.refresh_plots()
         self.set_dataType_text()
+
         self.statBar.showMessage("Finished loading.")
 
 
@@ -227,17 +228,17 @@ class GuiMain(QtGui.QMainWindow):
         sp.datFileName = QtGui.QFileDialog.getSaveFileName(None, "Save As File", sp.datFileName, "*.mat")
 
         if not (sys.platform == "linux2") :
-            sp.datFileName = sp.datFileName[0]  
+            sp.datFileName = sp.datFileName[0]
 
         self.save_file_selector()
-      
+
 
 
     def save_file_selector(self):
 
         self.statBar.showMessage("Saving . . . ")
         save_GEMS_SigPy_file(sp.datFileName)
-        self.statBar.showMessage("Saved file!")  
+        self.statBar.showMessage("Saved file!")
 
 
 
@@ -252,7 +253,3 @@ class GuiMain(QtGui.QMainWindow):
     def add_one(self):
         self.ctrlsRow+=1
         return self.ctrlsRow
-
-         
-
-

@@ -5,7 +5,7 @@
     Description: GUI for training and plotting the activation times.
 """
 
-import os 
+import os
 
 # External dependencies
 from pyqtgraph.Qt import QtGui, QtCore
@@ -21,10 +21,10 @@ from matplotlib import pyplot as plt
 
 
 # Internal dependencies
-import config_global as sp 
+import config_global as sp
 from file_io.gems_sigpy import load_GEMS_mat_into_SigPy
 from signal_processing.preprocessing import preprocess
-from ml_classes.SlowWaveCNN import SlowWaveCNN
+#from ml_classes.SlowWaveCNN import SlowWaveCNN
 from gui_plotting.mpl_plots  import *
 from gui_plotting.Gui_Main import GuiMain
 
@@ -32,7 +32,7 @@ import numpy as np
 np.set_printoptions(linewidth=1000, precision=3, threshold=np.inf)
 
 """
-Gastric data 
+Gastric data
 """
 
 # dataFile = 'pig72_exp9_aydin_recording_stim_Elec_FEVT_000'
@@ -81,5 +81,3 @@ if __name__ == '__main__' :
     # Set plot data
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
-
-

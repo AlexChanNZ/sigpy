@@ -82,12 +82,12 @@ def load_GEMS_mat_into_SigPy(fileNameAndPath, isNormal):
 
 def save_GEMS_SigPy_file(fileNameAndPath):
 
-    # To overwrite original GEMS data, comment this out to save GEMS data as backup.
+    # To overwrite original GEMS data
     fileToSave = dict(sp.dat)
     fileToSave.pop('SigPy', None)
     fileToSave.pop('GEMSorig_toapp', None)
     fileToSave.pop('GEMSorig_bdfdef', None)
-    # sp.dat.pop('bdfdef', None) #popping bdfdef because of UI control compatibility. 
+
     # EDIT: Appears saving UIControl component as struct still works in GEMS.
 
     # Save GEMS file
