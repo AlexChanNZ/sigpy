@@ -31,7 +31,7 @@ import config_global as sp
 from file_io.gems_sigpy import *
 
 #from ml_classes.SlowWaveCNN import SlowWaveCNN
-from ml_classes.SlowWaveCNNKeras1D import SlowWaveCNNKeras1D
+from ml_classes.SlowWaveCNNKeras import SlowWaveCNNKeras
 from gui_plotting.Gui_Window import GuiWindow
 from gui_plotting.Gui_LinePlots import GuiLinePlots
 from gui_plotting.Animate_Mapped import AnimateMapped
@@ -161,7 +161,7 @@ class GuiMain(QtGui.QMainWindow):
 
         # Create neural net and classify
         print("Creating neural net and classifying")
-        swCNN = SlowWaveCNNKeras1D()
+        swCNN = SlowWaveCNNKeras()
         swPredictions, swLocs = swCNN.classify_data(predictionWindows, self.cnnType)
         nSwLocs = len(swLocs)
 

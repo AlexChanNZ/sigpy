@@ -83,16 +83,7 @@ class SlowWaveCNNKeras:
 
     def train_neural_net(self, type_data_set):
 
-        if (type_data_set is 1):
-            print("Using Normal CNN")
-            nnFileName = "nn_normal_keras.h5"
-        elif (type_data_set is 0):
-            print("Using Pacing CNN")
-            nnFileName = "nn_pacing_keras.h5"
-        else:
-            print("No type selected")
-            return
-
+        nnFileName = "nn_normal_keras.h5"
         nnFileNameAndPath = sp.nnPath + nnFileName
         print("nnFileNameAndPath: ", nnFileNameAndPath)
 
@@ -105,13 +96,7 @@ class SlowWaveCNNKeras:
 
             print("Training neural net ...")
 
-            if (type_data_set is 1):
-                X_train, Y_train = self.load_training_dataset("normal")
-            elif (type_data_set is 0):
-                X_train, Y_train = self.load_training_dataset("pacing")
-                nnFileName = "nn_pacing.cnn"
-            else:
-                print("No training type selected")
+            X_train, Y_train = self.load_training_dataset("normal")
 
             model = Sequential()
             #1st Convolution Layer
