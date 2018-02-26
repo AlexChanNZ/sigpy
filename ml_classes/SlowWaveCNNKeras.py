@@ -144,7 +144,7 @@ class SlowWaveCNNKeras:
             Y_train = Y_train.astype(np.int32)
             print X_train.shape
             print Y_train.shape
-            model.fit(X_train, Y_train, nb_epoch=2, verbose=1)
+            model.fit(X_train, Y_train, nb_epoch=10, verbose=1)
             self.neural_net = model
             print("Finished training the network")
             sp.gui.statBar.showMessage("Finished training the network.")
