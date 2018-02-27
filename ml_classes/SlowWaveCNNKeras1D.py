@@ -76,27 +76,20 @@ class SlowWaveCNNKeras1D:
                 except Exception as e:
                     print("Exception: ", e)
                     print("Caused by file: ", trainingFile)
-
         print('Shape of the Train array is', X_train.shape)
         print('Shape of the Train Test array is', Y_train.shape)
         #test_array is arranged as Row1 = 1:36, 19:54, and so on
         X_train = X_train.reshape((-1, 36))
         Y_train = np_utils.to_categorical(Y_train, 2)
+        np.save('X_train_all', X_train)
+        np.save('Y_train_all', Y_train)
         return X_train, Y_train
 
 
 
     def train_neural_net(self, type_data_set):
 
-        if (type_data_set is 1):
-            print("Using Normal CNN")
-            nnFileName = "nn_normal_keras.h5"
-        elif (type_data_set is 0):
-            print("Using Pacing CNN")
-            nnFileName = "nn_pacing_keras.h5"
-        else:
-            print("No type selected")
-            return
+        nnFileName = "nn_1D.h5"
 
         nnFileNameAndPath = sp.nnPath + nnFileName
         print("nnFileNameAndPath: ", nnFileNameAndPath)
@@ -109,30 +102,23 @@ class SlowWaveCNNKeras1D:
         except Exception as e:
 
             print("Training neural net ...")
-
-            if (type_data_set is 1):
-                X_train, Y_train = self.load_training_dataset("normal")
-            elif (type_data_set is 0):
-                X_train, Y_train = self.load_training_dataset("pacing")
-                nnFileName = "nn_pacing.cnn"
-            else:
-                print("No training type selected")
+            X_train, Y_train = self.load_training_dataset("normal")
 
             model = Sequential()
             #1st Convolution Layer
-            model.add(Convolution1D(32, 9, activation='relu',
+            model.add(Convolution1D(64, 9, activation='relu',
                                     kernel_initializer='glorot_uniform',
                                     input_shape=(36, 1)))
             model.add(MaxPooling1D(pool_size=2))
 
             #2nd Convolution Layer
-            model.add(Convolution1D(32, 3, activation='relu'))
-            model.add(Dropout(0.5))
+            model.add(Convolution1D(64, 3, activation='relu'))
+            model.add(Dropout(0.4))
 
             #Fully connected layer
             model.add(Flatten())
-            model.add(Dense(256, activation='relu'))
-            model.add(Dropout(0.5))
+            model.add(Dense(128, activation='relu'))
+            model.add(Dropout(0.2))
 
             # Output
             model.add(Dense(2, activation='softmax'))
@@ -146,8 +132,6 @@ class SlowWaveCNNKeras1D:
 
             # Train the network
             Y_train = Y_train.astype(np.int32)
-            print X_train.shape
-            print Y_train.shape
             model.fit(np.expand_dims(X_train, axis=2), Y_train, nb_epoch=2, verbose=1)
             self.neural_net = model
             print("Finished training the network")
