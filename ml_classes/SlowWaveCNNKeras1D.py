@@ -89,7 +89,7 @@ class SlowWaveCNNKeras1D:
 
     def train_neural_net(self, type_data_set):
 
-        nnFileName = "nn_normal_keras.h5"
+        nnFileName = "nn_1D.h5"
 
         nnFileNameAndPath = sp.nnPath + nnFileName
         print("nnFileNameAndPath: ", nnFileNameAndPath)

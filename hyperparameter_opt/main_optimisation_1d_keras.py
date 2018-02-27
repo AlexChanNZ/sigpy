@@ -71,7 +71,7 @@ def model(X_train, y_train, X_test, y_test):
                     metrics=['accuracy'])
 
     # Train the network
-    model.fit(np.expand_dims(X_train, axis=2), y_train, nb_epoch=2)
+    model.fit(np.expand_dims(X_train, axis=2), y_train, nb_epoch=15)
     scores, acc = model.evaluate(np.expand_dims(X_test, axis=2), y_test)
     print('Test accuracy:', acc)
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
@@ -87,5 +87,6 @@ if __name__ == '__main__' :
     X_train, y_train, X_test, y_test = data()
     print("Evalutation of best performing model:")
     print(best_model.evaluate(np.expand_dims(X_test, axis=2), y_test))
+    best_model.save('/media/hpc/codes/GitLab/sigpy_master/sigpy/ml_models/nn_1D')
     print("Best performing model chosen hyper-parameters:")
     print(best_run)

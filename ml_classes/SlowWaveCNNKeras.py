@@ -83,7 +83,7 @@ class SlowWaveCNNKeras:
 
     def train_neural_net(self, type_data_set):
 
-        nnFileName = "nn_normal_keras.h5"
+        nnFileName = "nn_2D.h5"
         nnFileNameAndPath = sp.nnPath + nnFileName
         print("nnFileNameAndPath: ", nnFileNameAndPath)
 
@@ -100,20 +100,20 @@ class SlowWaveCNNKeras:
 
             model = Sequential()
             #1st Convolution Layer
-            model.add(Convolution2D(32, 3, 3, activation='relu',
+            model.add(Convolution2D(64, 3, 3, activation='relu',
                                     kernel_initializer='glorot_uniform',
                                     input_shape=(1, 6, 6)))
             model.add(MaxPooling2D(pool_size=(2,2)))
 
             #2nd Convolution Layer
-            model.add(Convolution2D(32, 2, 2, activation='relu'))
+            model.add(Convolution2D(16, 2, 2, activation='relu'))
             model.add(MaxPooling2D(pool_size=(1,1)))
-            model.add(Dropout(0.5))
+            model.add(Dropout(0.3))
 
             #Fully connected layer
             model.add(Flatten())
             model.add(Dense(256, activation='relu'))
-            model.add(Dropout(0.5))
+            model.add(Dropout(0.3))
 
             # Output
             model.add(Dense(2, activation='softmax'))
