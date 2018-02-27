@@ -19,7 +19,7 @@ import config_global as sp
 
 from file_io.gems_sigpy import *
 
-
+import scipy.io as sio
 # from TrainingDataPlot import TrainingDataPlot
 
 class GuiLinePlots:
@@ -30,24 +30,24 @@ class GuiLinePlots:
         :return: NULL
         """
 
-        self.set_current_dataset()        
+        self.set_current_dataset()
 
         self.plotsScroll = pg.PlotWidget(title="Electrophysiology Line Graphs")
-        self.plotsZoomed = pg.PlotWidget(title="Zoomed-in electrophysiology")        
+        self.plotsZoomed = pg.PlotWidget(title="Zoomed-in electrophysiology")
         self.set_rect_region_ROI()
 
         self.add_scatter_plots()
         self.set_crosshair()
         self.elec = []
- 
+
         self.refresh_plots()
 
         # self.trainingDataPlot = TrainingDataPlot()
 
 
     def refresh_plots(self):
-        self.clear_plots()  
-        self.set_current_dataset() 
+        self.clear_plots()
+        self.set_current_dataset()
         self.set_plot_data()
 
 
@@ -60,9 +60,9 @@ class GuiLinePlots:
         self.nChans = self.plotData.shape[0]
         self.nSamples = self.plotData.shape[1]
         self.timeBetweenSamples = sp.dat['SigPy']['timeBetweenSamples']
-        self.timeStart = sp.dat['SigPy']['timeStart'] 
+        self.timeStart = sp.dat['SigPy']['timeStart']
         self.isNormal = sp.dat['SigPy']['dataIsNormal']
-       
+
 
         if "MarkersPacing" in sp.dat['SigPy'].keys() :
 
@@ -80,7 +80,7 @@ class GuiLinePlots:
             print("SWMarkers key found!")
 
         else :
-            self.markersSWs = []         
+            self.markersSWs = []
 
 
     def clear_plots(self):
@@ -92,7 +92,7 @@ class GuiLinePlots:
         self.curves_left = []
         self.curves_right = []
         self.curve_bottom = []
-        self.markersSWs = [] 
+        self.markersSWs = []
 
 
     def add_scatter_plots(self):
@@ -105,7 +105,7 @@ class GuiLinePlots:
         self.curve_bottom.append(c_event)
 
         self.plotsScroll.setYRange(0, 100)
-        self.plotsScroll.setXRange(0, 3000)    
+        self.plotsScroll.setXRange(0, 3000)
 
         for i in range(self.nChans):
 
@@ -162,8 +162,8 @@ class GuiLinePlots:
 
     def set_curve_item(self):
         self.plotsScroll.setYRange(0, 100)
-        self.plotsScroll.setXRange(0, 3000)    
-            
+        self.plotsScroll.setXRange(0, 3000)
+
         for i in range(self.nChans):
             c1 = pg.PlotCurveItem(pen=(i, self.nChans))
             self.plotsScroll.addItem(c1)
@@ -187,7 +187,7 @@ class GuiLinePlots:
 
         #print("self.plotData.shape: ", self.plotData.shape)
 
-        
+
         # self.trainingDataPlot.set_plot_data(data)
         self.set_curve_item()
 
@@ -198,9 +198,9 @@ class GuiLinePlots:
         self.plotsScroll.setYRange(0, 100)
 
         xAxisMax = np.min([self.nSamples, 5000])
-        self.plotsScroll.setXRange(0, xAxisMax)   
+        self.plotsScroll.setXRange(0, xAxisMax)
 
-        ax = self.plotsScroll.getAxis('bottom')    #This is the trick  
+        ax = self.plotsScroll.getAxis('bottom')    #This is the trick
 
         tickInterval = int(xAxisMax / 6) # Produce 6 tick labels per scroll window
 
@@ -254,11 +254,11 @@ class GuiLinePlots:
 
     def mark_slow_wave_events(self, dataForMarking, swPredictions, swLocs, windowSize, indexJump) :
         # Convert predictions from NN to events to plot
- 
+
         self.swMarksScrlPlot.clear()
         self.swMarksZoomPlot.clear()
 
-        # Plot the prediction outputs 
+        # Plot the prediction outputs
         predictions = np.zeros(len(dataForMarking), dtype=int)
 
         count = 0
@@ -278,41 +278,41 @@ class GuiLinePlots:
 
 
         # Clean up duplicates
-        swPositions_list = []        
+        swPositions_list = []
         swLocsCleaned = np.array(np.where(predictions == 1))
-        
-        sync_events = [] 
- 
-        # Check for sync events 
-        for val in swLocsCleaned.transpose(): 
-            sync_events.append(int(val % self.nSamples)) 
+
+        sync_events = []
+
+        # Check for sync events
+        for val in swLocsCleaned.transpose():
+            sync_events.append(int(val % self.nSamples))
         remove_sync_point = set([x for x in sync_events if sync_events.count(x) > int(0.20 * self.nChans)])
- 
-         
-        #remove_sync_point.clear() 
- 
-        # Remove the events that are marked exactly for more than 40 times along same x from the actual array 
- 
-        for swPred in swLocsCleaned.transpose(): 
-            if int(swPred % self.nSamples) not in remove_sync_point: 
+
+        #remove_sync_point.clear()
+
+        # Remove the events that are marked exactly for more than 0.2 times nchannels along same x from the actual array
+        for swPred in swLocsCleaned.transpose():
+            if int(swPred % self.nSamples) not in remove_sync_point:
                 xIndex = int(swPred / self.nSamples)
                 yChannel = int((swPred % self.nSamples))
                 swPositions_list.append([xIndex, yChannel])
 
-#        for swPred in swLocsCleaned.transpose():
-#            xIndex = int(swPred / self.nSamples)
-#            yChannel = int((swPred % self.nSamples))
-#            swPositions_list.append([xIndex, yChannel])
-
         self.swPositions = np.array(swPositions_list).transpose()
+
+        #Remove noisy channels based on 2*std of activation points detected across each channel
+        sum_points = np.zeros(self.nChans)
+        for channel in np.arange(0, self.nChans):
+            #Distribution of activation points across channels is saved here
+            sum_points[channel] = np.size(np.where(self.swPositions[0,:] == channel))
+        cut_off_activation_points = 2 * np.std(sum_points)
+        #noisy channel chosen from based on the define cut-off above
+        noisy_channels = np.where(sum_points >= cut_off_activation_points)
+        for channel in noisy_channels[0]:
+            self.swPositions = np.delete(self.swPositions, np.where(self.swPositions[0,:] == (channel)), axis=1)
         self.nSWsMarked = len(self.swPositions[1])
 
         self.swMarksScrlPlot.addPoints(x=self.swPositions[1], y=(self.swPositions[0]+0.75))
         self.swMarksZoomPlot.addPoints(x=self.swPositions[1], y=(self.swPositions[0]+0.75))
 
         # Convert event co-ordinates to indices for 2d TOA to output to GEMS
-        update_GEMS_data_with_TOAs(self.swPositions, self.nChans) 
-
-
-
-
+        update_GEMS_data_with_TOAs(self.swPositions, self.nChans)
