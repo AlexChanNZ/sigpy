@@ -51,45 +51,17 @@ class SlowWaveCNNKeras1D:
 
     def load_training_dataset(self, dataType):
 
-        trainingDataPlotPath = sp.dataRoot + '/' + dataType
-        nFiles = 0
-
-        for trainingFile in os.listdir(trainingDataPlotPath):
-
-            trainingFileAndPath = trainingDataPlotPath + "/" + trainingFile
-
-            print("trainingFileAndPath: ",trainingFileAndPath)
-
-            if ".mat" in trainingFileAndPath:
-                nFiles+=1
-                data_dic = sio.loadmat(trainingFileAndPath)
-
-                try:
-                    trainingSamples = np.array(data_dic['samples'])
-                    trainingLabels = np.array(data_dic['label'])
-                    if nFiles > 1:
-                        X_train = np.append(X_train, trainingSamples[:,:])
-                        Y_train = np.append(Y_train, trainingLabels[:,:])
-                    else:
-                        X_train = trainingSamples[:,:]
-                        Y_train = trainingLabels[:,:]
-                except Exception as e:
-                    print("Exception: ", e)
-                    print("Caused by file: ", trainingFile)
-        print('Shape of the Train array is', X_train.shape)
-        print('Shape of the Train Test array is', Y_train.shape)
-        #test_array is arranged as Row1 = 1:36, 19:54, and so on
-        X_train = X_train.reshape((-1, 36))
+        trainingFileAndPath = sp.dataRoot + '/train_samples_label_data.mat'
+        data_dic = sio.loadmat(trainingFileAndPath)
+        trainingSamples = np.array(data_dic['data'])
+        X_train = trainingSamples[:,:-1]
+        Y_train = trainingSamples[:, -1]
         Y_train = np_utils.to_categorical(Y_train, 2)
-        np.save('X_train_all', X_train)
-        np.save('Y_train_all', Y_train)
         return X_train, Y_train
-
-
 
     def train_neural_net(self, type_data_set):
 
-        nnFileName = "nn_1D.h5"
+        nnFileName = "nn_1D_all_.h5"
 
         nnFileNameAndPath = sp.nnPath + nnFileName
         print("nnFileNameAndPath: ", nnFileNameAndPath)
@@ -132,7 +104,7 @@ class SlowWaveCNNKeras1D:
 
             # Train the network
             Y_train = Y_train.astype(np.int32)
-            model.fit(np.expand_dims(X_train, axis=2), Y_train, nb_epoch=2, verbose=1)
+            model.fit(np.expand_dims(X_train, axis=2), Y_train, nb_epoch=10, verbose=1)
             self.neural_net = model
             print("Finished training the network")
             sp.gui.statBar.showMessage("Finished training the network.")

@@ -63,6 +63,7 @@ def data_with_pacing_training():
     dataset = np.vstack((norm_samples_label, pacing_samples_label))
     np.random.shuffle(dataset)
     np.random.shuffle(dataset)
+    #sio.savemat('/media/hpc/codes/GitLab/sigpy_master/sigpy/data/train_samples_label_data.mat', {'data': dataset})
     X_train, X_test, y_train, y_test = train_test_split(dataset[:, :-1],
                                         dataset[:, -1], test_size=0.3, random_state=42)
     y_train = np_utils.to_categorical(y_train, 2)
@@ -72,20 +73,20 @@ def data_with_pacing_training():
 def d2model(X_train, y_train, X_test, y_test):
     model = Sequential()
     #1st Convolution Layer
-    model.add(Convolution2D(32, 3, 3, activation='relu',
+    model.add(Convolution2D(64, 3, 3, activation='relu',
                             kernel_initializer='glorot_uniform',
                             input_shape=(1, 6, 6)))
     model.add(MaxPooling2D(pool_size=(2,2)))
 
     #2nd Convolution Layer
-    model.add(Convolution2D(32, 2, 2, activation='relu'))
+    model.add(Convolution2D(16, 2, 2, activation='relu'))
     model.add(MaxPooling2D(pool_size=(1,1)))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.3))
 
     #Fully connected layer
     model.add(Flatten())
     model.add(Dense(256, activation='relu'))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.3))
 
     # Output
     model.add(Dense(2, activation='softmax'))
@@ -99,6 +100,7 @@ def d2model(X_train, y_train, X_test, y_test):
 
     # Train the network
     model.fit(X_train, y_train, nb_epoch=15, verbose=1)
+    model.save('/media/hpc/codes/GitLab/sigpy_master/sigpy/ml_models/nn_2D_all.h5')
     scores, acc = model.evaluate(X_test, y_test)
     print('Test accuracy:', acc)
 
@@ -112,13 +114,13 @@ def d1model(X_train, y_train, X_test, y_test):
     model.add(MaxPooling1D(pool_size=2))
 
     #2nd Convolution Layer
-    model.add(Convolution1D(32, 3, activation='relu'))
-    model.add(Dropout(0.5))
+    model.add(Convolution1D(64, 3, activation='relu'))
+    model.add(Dropout(0.4))
 
     #Fully connected layer
     model.add(Flatten())
     model.add(Dense(128, activation='relu'))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.2))
 
     # Output
     model.add(Dense(2, activation='softmax'))
@@ -133,6 +135,7 @@ def d1model(X_train, y_train, X_test, y_test):
 
     # Train the network
     model.fit(np.expand_dims(X_train, axis=2), y_train, nb_epoch=15)
+    model.save('/media/hpc/codes/GitLab/sigpy_master/sigpy/ml_models/nn_1D_all.h5')
     scores, acc = model.evaluate(np.expand_dims(X_test, axis=2), y_test)
     print('Test accuracy:', acc)
 
