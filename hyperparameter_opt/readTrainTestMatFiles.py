@@ -9,8 +9,10 @@ from keras.layers import Convolution2D, MaxPooling2D
 from keras.optimizers import SGD
 from keras.utils import np_utils
 from keras.models import load_model
+from keras.utils import plot_model
 from keras import backend as K
 K.set_image_dim_ordering('th')
+import time
 
 from sklearn.model_selection import train_test_split
 
@@ -80,7 +82,7 @@ def d2model(X_train, y_train, X_test, y_test):
 
     #2nd Convolution Layer
     model.add(Convolution2D(16, 2, 2, activation='relu'))
-    model.add(MaxPooling2D(pool_size=(1,1)))
+    #model.add(MaxPooling2D(pool_size=(1,1)))
     model.add(Dropout(0.3))
 
     #Fully connected layer
@@ -99,9 +101,13 @@ def d2model(X_train, y_train, X_test, y_test):
                     metrics=['accuracy'])
 
     # Train the network
-    model.fit(X_train, y_train, nb_epoch=15, verbose=1)
+    model.fit(X_train, y_train, nb_epoch=2, verbose=1)
     model.save('/media/hpc/codes/GitLab/sigpy_master/sigpy/ml_models/nn_2D_all.h5')
+    plot_model(model, '/media/hpc/codes/GitLab/sigpy_master/sigpy/ml_models/2D_all.png', show_shapes=True)
+    start = time.time()
     scores, acc = model.evaluate(X_test, y_test)
+    end = time.time()
+    print('Seconds: ', end - start)
     print('Test accuracy:', acc)
 
 
@@ -115,6 +121,7 @@ def d1model(X_train, y_train, X_test, y_test):
 
     #2nd Convolution Layer
     model.add(Convolution1D(64, 3, activation='relu'))
+    model.add(MaxPooling1D(pool_size=2))
     model.add(Dropout(0.4))
 
     #Fully connected layer
@@ -134,9 +141,13 @@ def d1model(X_train, y_train, X_test, y_test):
                     metrics=['accuracy'])
 
     # Train the network
-    model.fit(np.expand_dims(X_train, axis=2), y_train, nb_epoch=15)
+    model.fit(np.expand_dims(X_train, axis=2), y_train, nb_epoch=2)
     model.save('/media/hpc/codes/GitLab/sigpy_master/sigpy/ml_models/nn_1D_all.h5')
+    plot_model(model, '/media/hpc/codes/GitLab/sigpy_master/sigpy/ml_models/1D_all.png', show_shapes=True)
+    start = time.time()
     scores, acc = model.evaluate(np.expand_dims(X_test, axis=2), y_test)
+    end = time.time()
+    print('Seconds: ', end - start)
     print('Test accuracy:', acc)
 
 # Start Qt event loop unless running in interactive mode.

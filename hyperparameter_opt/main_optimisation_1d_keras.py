@@ -52,6 +52,7 @@ def model(X_train, y_train, X_test, y_test):
 
     #2nd Convolution Layer
     model.add(Convolution1D({{choice([16, 32, 64])}}, 3, activation='relu'))
+    model.add(MaxPooling1D(pool_size=2))
     model.add(Dropout({{uniform(0, 1)}}))
 
     #Fully connected layer
